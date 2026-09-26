@@ -1,0 +1,94 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .ei-wrap { padding:24px; background:#f4f6fb; }
+  .ei-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .ei-header h1 { margin:0; font-size:22px; color:#1e1b4b; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:800px){ .grid2 { grid-template-columns:1fr; } }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #eef0f6; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:13px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  .empty { color:#9ca3af; font-size:13px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper ei-wrap">
+    <div class="ei-header">
+      <h1>Employee Intelligence — {{ twin.name }}</h1>
+      <div>
+        <a href="/admin_employee_detail/{{ employee_id }}/" class="btn" style="background:linear-gradient(135deg,#9ca3af,#6b7280);">Full Employee Dashboard</a>
+        <a href="/workforce_observatory/" class="btn">Observatory</a>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Profile</h2>
+        <div class="kv"><span>Employee ID</span><span>{{ twin.profile.empid }}</span></div>
+        <div class="kv"><span>Designation</span><span>{{ twin.profile.designation|default:"-" }}</span></div>
+        <div class="kv"><span>Department</span><span>{{ twin.profile.department|default:"-" }}</span></div>
+        <div class="kv"><span>On leave</span><span>{{ twin.profile.on_leave|yesno:"Yes,No" }}</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Current Workload <span class="badge" style="background:#10b981;">REAL DATA</span></h2>
+        <div class="kv"><span>Assigned</span><span>{{ twin.current_workload.assigned }}</span></div>
+        <div class="kv"><span>Completed</span><span>{{ twin.current_workload.completed }}</span></div>
+        <div class="kv"><span>Pending</span><span>{{ twin.current_workload.pending }}</span></div>
+        <div class="kv"><span>Overdue</span><span style="color:{% if twin.current_workload.overdue %}#ef4444{% else %}inherit{% endif %};">{{ twin.current_workload.overdue }}</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Performance &amp; Workload Trend</h2>
+        <div class="kv"><span>Performance trend</span><span>{{ twin.performance_trend.direction }}</span></div>
+        <div class="kv"><span>Workload trend</span><span>{{ twin.workload_trend.direction }}</span></div>
+        <h3 style="font-size:13px;margin-top:14px;">Projects</h3>
+        {% for p in twin.project_involvement %}
+        <div class="kv"><span><a href="/project_intelligence/{{ p.project_id }}/">{{ p.project_name }}</a></span><span>{{ p.role }}</span></div>
+        {% empty %}<div class="empty">No active project memberships.</div>{% endfor %}
+      </div>
+
+      <div class="card">
+        <h2>AI Signals</h2>
+        {% if twin.risk_prediction.available %}
+          <div class="kv"><span>Risk prediction</span><span><b>{{ twin.risk_prediction.predicted_outcome }}</b> ({{ twin.risk_prediction.confidence }})</span></div>
+        {% else %}<div class="empty">Risk: <span class="badge" style="background:#9ca3af;">{{ twin.risk_prediction.reason|default:"MODEL_NOT_READY" }}</span></div>{% endif %}
+        {% if twin.performance_prediction.available %}
+          <div class="kv"><span>Performance prediction</span><span><b>{{ twin.performance_prediction.predicted_outcome }}</b></span></div>
+        {% else %}<div class="empty">Performance: <span class="badge" style="background:#9ca3af;">{{ twin.performance_prediction.reason|default:"MODEL_NOT_READY" }}</span></div>{% endif %}
+
+        <h3 style="font-size:13px;margin-top:14px;">Anomaly Status</h3>
+        {% if anomaly_status.status == 'OK' %}
+          {% if anomaly_status.is_anomaly %}
+            <div class="kv"><span>Flagged as anomaly</span><span style="color:#ef4444;">score {{ anomaly_status.anomaly_score }}</span></div>
+          {% else %}<div class="empty">Not flagged as an anomaly in the current run.</div>{% endif %}
+        {% else %}<div class="empty">{{ anomaly_status.status }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Skill Profile <span class="badge" style="background:#f59e0b;">RULE-BASED</span></h2>
+      <div class="sub">{{ skill_profile.limitation }}</div>
+      <div class="kv"><span>Roles held</span><span>{% for r in skill_profile.roles_held %}{{ r }}{% if not forloop.last %}, {% endif %}{% empty %}None recorded{% endfor %}</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Recent Activity &amp; Timeline</h2>
+      {% for e in timeline %}
+      <div class="timeline-item">
+        <div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div>
+        <div>{{ e.description }}{% if e.task %} <a href="/task_intelligence/{{ e.task.id }}/">(task)</a>{% endif %}{% if e.project %} <a href="/project_intelligence/{{ e.project.id }}/">(project)</a>{% endif %}</div>
+      </div>
+      {% empty %}<div class="empty">No recorded events for this employee yet.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

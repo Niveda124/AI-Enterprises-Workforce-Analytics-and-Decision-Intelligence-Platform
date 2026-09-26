@@ -1,0 +1,30 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <h2>AI Intelligence</h2>
+    <a href="/generate_predictions" style="background:#4338ca;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;display:inline-block;margin-bottom:16px;">Run Predictions Now</a>
+
+    <h3>Predictions</h3>
+    {% if predictions %}
+    <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+      <tr style="background:#6366f1;color:#fff;"><th style="padding:8px;">Type</th><th style="padding:8px;">Employee</th><th style="padding:8px;">Project</th><th style="padding:8px;">Outcome</th><th style="padding:8px;">Confidence</th><th style="padding:8px;">Risk</th></tr>
+      {% for p in predictions %}
+      <tr><td style="padding:8px;">{{ p.prediction_type }}</td><td style="padding:8px;">{{ p.employee }}</td><td style="padding:8px;">{{ p.project }}</td><td style="padding:8px;">{{ p.predicted_outcome }}</td><td style="padding:8px;">{{ p.confidence }}</td><td style="padding:8px;">{{ p.risk_level }}</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>AI predictions will appear after the ML model is trained.</p>
+    {% endif %}
+
+    <h3>AI Recommendations</h3>
+    {% if recommendations %}
+      {% for r in recommendations %}
+      <p>{{ r.employee }} / {{ r.project }} — {{ r.recommendation_text }} ({{ r.priority }}, {{ r.status }})</p>
+      {% endfor %}
+    {% else %}
+    <p>No AI recommendations available yet.</p>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

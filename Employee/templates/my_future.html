@@ -1,0 +1,76 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<style>
+  .mf-wrap { padding:24px; background:#f4f6fb; }
+  .mf-wrap h1 { margin:0 0 20px; font-size:22px; color:#1e1b4b; }
+  .rail { position:relative; margin:10px 0; padding-left:30px; }
+  .rail-line { position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:#e2e4ee; }
+  .rail-step { position:relative; margin-bottom:22px; }
+  .rail-dot { position:absolute; left:-30px; top:2px; width:16px; height:16px; border-radius:50%; background:#6366f1; border:3px solid #fff; box-shadow:0 0 0 2px #6366f1; }
+  .rail-label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6366f1; font-weight:800; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); }
+  .rail-content { background:#f8f9fc; border-radius:12px; padding:12px; margin-top:6px; font-size:13px; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .empty { color:#9ca3af; font-size:13px; }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+</style>
+<section id="main-content">
+  <section class="wrapper mf-wrap">
+    <h1>What Could Happen?</h1>
+    <div class="card">
+      <div class="rail">
+        <div class="rail-line"></div>
+
+        <div class="rail-step">
+          <div class="rail-dot"></div>
+          <div class="rail-label">Your Current Work</div>
+          <div class="rail-content">
+            <div class="kv"><span>Assigned</span><span>{{ stats.assigned }}</span></div>
+            <div class="kv"><span>Completed</span><span>{{ stats.completed }}</span></div>
+            <div class="kv"><span>Pending</span><span>{{ stats.pending }}</span></div>
+          </div>
+        </div>
+
+        <div class="rail-step">
+          <div class="rail-dot" style="background:#f59e0b;box-shadow:0 0 0 2px #f59e0b;"></div>
+          <div class="rail-label">Upcoming Deadlines</div>
+          <div class="rail-content">
+            {% for t in upcoming %}<div class="kv"><span>{{ t.title }}</span><span>{{ t.endDate|date:"d M" }}</span></div>{% empty %}<div class="empty">Nothing due in the next 7 days.</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="rail-step">
+          <div class="rail-dot" style="background:#ef4444;box-shadow:0 0 0 2px #ef4444;"></div>
+          <div class="rail-label">Current Workload</div>
+          <div class="rail-content">
+            <div class="kv"><span>Overdue</span><span style="color:{% if stats.overdue %}#ef4444{% else %}inherit{% endif %};">{{ stats.overdue }}</span></div>
+          </div>
+        </div>
+
+        <div class="rail-step">
+          <div class="rail-dot" style="background:#6366f1;box-shadow:0 0 0 2px #6366f1;"></div>
+          <div class="rail-label">Available Signal</div>
+          <div class="rail-content">
+            {% for w in warnings %}
+              <div style="margin-bottom:6px;"><span class="badge" style="background:{% if w.severity == 'CRITICAL' %}#ef4444{% elif w.severity == 'WARNING' %}#f59e0b{% else %}#6366f1{% endif %};">{{ w.severity }}</span> {{ w.evidence|join:" " }}</div>
+            {% empty %}<div class="empty">No verified signal detected right now.</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="rail-step">
+          <div class="rail-dot" style="background:#10b981;box-shadow:0 0 0 2px #10b981;"></div>
+          <div class="rail-label">Possible Pressure</div>
+          <div class="rail-content">
+            {% if forecast.available %}
+              <p>Active model forecasts next-period workload score of <b>{{ forecast.predicted_workload_score }}</b>.</p>
+              <p style="font-size:11px;color:#9ca3af;">This is a possible future, not a guarantee.</p>
+            {% else %}
+              <div class="empty">{{ forecast.status }} — INSUFFICIENT_DATA for a personal ML forecast right now.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'emp_index.html' %}
+{% load static %}
+{% block body %}
+<section id="main-content">
+	<section class="wrapper">
+	<div class="form-w3layouts">
+        <!-- page start-->
+        <!-- page start-->
+        <div class="row">
+            <div class="col-lg-12">
+                    <section class="panel">
+                        <header class="panel-heading">
+                            Edit Details
+                        </header>
+                        <div class="panel-body">
+                            <div class="position-center">
+                                <form role="form" method="post" action="" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <select class="form-control" disabled>
+                                        <option value="{{emp.dept.id}}">{{emp.dept.name}}</option>
+                                    </select>
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Id</label>
+                                    <input type="text" class="form-control"  placeholder="Enter Employee Id" name="eid" value="{{emp.empid}}" readonly>
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Name</label>
+                                    <input type="text" class="form-control" placeholder="Enter FullName" name="name" value="{{emp.user.first_name}}">
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Email</label>
+                                    <input type="email" class="form-control" id="mainid" onblur="check()" placeholder="Enter Email" name="email" value="{{emp.user.email}}">
+                                <span id="demo"></span>
+                                     </div>
+
+                                     <div class="form-group">
+                                    <label>Employee Contact Number</label>
+                                    <input type="number" class="form-control" placeholder="Enter Contact" name="contact" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" value="{{emp.contact}}" maxlength="10" >
+                                </div>
+                                    <div class="form-group">
+                                    <label>Employee Address</label>
+                                    <input type="text" class="form-control"  placeholder="Enter Address" name="address" value="{{emp.address}}">
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Designation</label>
+                                    <input type="text" class="form-control"  placeholder="Enter Designation" name="designation" value="{{emp.designation}}">
+                                </div>
+                                    <div class="form-group">
+                                    <label >Employee Date of Birth</label>
+                                    <input type="date" class="form-control" placeholder="Enter Dob" name="dob" value="{{emp.dob|date:'Y-m-d'}}">
+                                </div>
+                                    <div class="form-group">
+                                    <label>Employee Date of Joining</label>
+                                    <input type="date" class="form-control" placeholder="Enter Doj" name="doj" value="{{emp.doj|date:'Y-m-d'}}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Description(if any)</label>
+                                    <textarea class="form-control" name="description" >{{emp.description}}</textarea>
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Image</label>
+                                         <img src="{{data.image.url}}" style="width:200px;height:100px;">
+                                    <input type="file" name="img" class="form-control" >
+                                                    </div>
+                                <button type="submit" class="btn btn-info">Update</button>
+                            </form>
+                            </div>
+
+                        </div>
+                    </section>
+
+            </div>
+
+        </div>
+
+    </div>
+    </section>
+</section>
+{% endblock %}

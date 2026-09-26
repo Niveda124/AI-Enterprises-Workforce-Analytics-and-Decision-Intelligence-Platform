@@ -1,0 +1,157 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .wo-wrap { padding:24px; background:#f4f6fb; }
+  .wo-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .wo-header h1 { margin:0; font-size:24px; color:#1e1b4b; }
+  .wo-btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:10px 20px; border:none; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  .state-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:14px; }
+  .state-card { background:#f8f9fc; border-radius:12px; padding:16px; text-align:center; }
+  .state-card .n { font-size:26px; font-weight:800; color:#1e1b4b; }
+  .state-card .l { font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-top:4px; }
+  .pulse-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid #eef0f6; animation: fadein .4s ease; }
+  @keyframes fadein { from { opacity:0; transform: translateY(-4px);} to {opacity:1; transform:translateY(0);} }
+  .pulse-time { font-size:11px; color:#9ca3af; min-width:48px; }
+  .pulse-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .pulse-dot.info { background:#6366f1; } .pulse-dot.warning { background:#f59e0b; } .pulse-dot.critical { background:#ef4444; }
+  .pulse-desc { font-size:13px; color:#1e1b4b; }
+  .map-col { text-align:center; }
+  .map-node { background:#fff; border:1px solid #e2e4ee; border-radius:12px; padding:10px 14px; margin:6px auto; font-size:12px; display:block; text-decoration:none; color:#1e1b4b; max-width:220px; }
+  .map-node:hover { border-color:#6366f1; box-shadow:0 2px 8px rgba(99,102,241,.15); }
+  .map-node.root { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-weight:700; }
+  .map-arrow { color:#c7c9d9; font-size:18px; }
+  .empty { color:#9ca3af; font-size:13px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper wo-wrap">
+    <div class="wo-header">
+      <h1>Workforce Observatory</h1>
+      <a href="/decision_center/" class="wo-btn" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);">Decision Center</a>
+    </div>
+
+    <div class="card">
+      <h2>Workforce State</h2>
+      <div class="sub">Live counts from the current database.</div>
+      <div class="state-grid">
+        <div class="state-card"><div class="n">{{ workforce_twin.employee_count }}</div><div class="l">Employees</div></div>
+        <div class="state-card"><div class="n">{{ active_projects }}</div><div class="l">Active Projects</div></div>
+        <div class="state-card"><div class="n">{{ active_tasks }}</div><div class="l">Active Tasks</div></div>
+        <div class="state-card"><div class="n">{{ pending_tasks }}</div><div class="l">Pending Tasks</div></div>
+        <div class="state-card"><div class="n" style="color:#ef4444;">{{ overdue_tasks }}</div><div class="l">Overdue Tasks</div></div>
+        <div class="state-card"><div class="n">{{ completed_tasks }}</div><div class="l">Completed Tasks</div></div>
+        <div class="state-card"><div class="n">{{ recent_events|length }}</div><div class="l">Recent Events</div></div>
+        <div class="state-card"><div class="n">{{ active_model_count }}</div><div class="l">Active AI Models</div></div>
+        <div class="state-card"><div class="n" style="color:{% if open_alerts %}#f59e0b{% else %}#1e1b4b{% endif %};">{{ open_alerts }}</div><div class="l">Open Alerts</div></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;">
+      <div class="card">
+        <h2>Live Workforce Pulse</h2>
+        <div class="sub">Real events, most recent first. Polls for new activity every 20s.</div>
+        <div id="pulseList">
+          {% for e in recent_events %}
+          <div class="pulse-item">
+            <div class="pulse-time">{{ e.created_date|date:"H:i" }}</div>
+            <div class="pulse-dot {{ e.severity }}"></div>
+            <div class="pulse-desc">
+              {{ e.description }}
+              {% if e.project %}<br><a href="/project_intelligence/{{ e.project.id }}/" style="font-size:11px;">Open project</a>{% endif %}
+              {% if e.employee and not e.project %}<br><a href="/employee_intelligence/{{ e.employee.id }}/" style="font-size:11px;">Open employee</a>{% endif %}
+            </div>
+          </div>
+          {% empty %}<div class="empty">No workforce events recorded yet - events appear here as real actions happen.</div>{% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Anomalies</h2>
+        {% if anomaly_summary.status == 'OK' %}
+          <p style="font-size:13px;">{{ anomaly_summary.anomaly_count }} of {{ anomaly_summary.evaluated_count }} employees flagged.</p>
+          {% for a in anomaly_summary.anomalies|slice:":5" %}
+          <div style="font-size:12px;padding:4px 0;"><a href="/employee_intelligence/{{ a.employee_id }}/">{{ a.name }}</a> - score {{ a.anomaly_score }}</div>
+          {% endfor %}
+        {% else %}
+          <div class="empty">{{ anomaly_summary.status }}{% if anomaly_summary.reason %} - {{ anomaly_summary.reason }}{% endif %}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Future Signals</h2>
+      <div class="sub">Early warnings, not guarantees. <a href="/prevention_center/">Open Prevention Center</a></div>
+      <div class="state-grid">
+        <div class="state-card"><div class="n">{{ future_warning_count }}</div><div class="l">Emerging Situations</div></div>
+        <div class="state-card"><div class="n">{{ future_workload_signal_count }}</div><div class="l">Workload Signals</div></div>
+        <div class="state-card"><div class="n">{{ future_project_warning_count }}</div><div class="l">Project Warnings</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Employee Signals</h2>
+      <div class="sub">Real interaction counts. <a href="/workforce_interactions/">Open Interaction Center</a></div>
+      <div class="state-grid">
+        <div class="state-card"><div class="n">{{ new_blockers_count }}</div><div class="l">New Blockers</div></div>
+        <div class="state-card"><div class="n" style="color:#ef4444;">{{ urgent_request_count }}</div><div class="l">Urgent Requests</div></div>
+        <div class="state-card"><div class="n">{{ pending_employee_response_count }}</div><div class="l">Pending Employee Responses</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Organizational Learning Signals</h2>
+      <div class="sub">Real observations, not causal claims. <a href="/organizational_brain/">Open Organizational Brain</a></div>
+      <div class="state-grid">
+        <div class="state-card"><div class="n">{{ learning_signal_count }}</div><div class="l">Signals Detected</div></div>
+      </div>
+      {% for s in learning_signals_sample %}
+      <div style="font-size:12px;padding:6px 0;border-bottom:1px solid #eef0f6;">{{ s.observation }}</div>
+      {% empty %}<div class="empty">No learning signals detected yet.</div>{% endfor %}
+    </div>
+
+    <div class="card">
+      <h2>Workforce Map</h2>
+      <div class="sub">Normal page navigation - click any node.</div>
+      <div style="display:flex;align-items:flex-start;gap:10px;overflow-x:auto;padding-bottom:8px;">
+        <div class="map-col"><span class="map-node root">Workforce</span></div>
+        <div class="map-arrow">-&gt;</div>
+        <div class="map-col">
+          {% for p in projects %}<a class="map-node" href="/project_intelligence/{{ p.id }}/">{{ p.name }}</a>{% empty %}<span class="empty">No active projects</span>{% endfor %}
+        </div>
+        <div class="map-arrow">-&gt;</div>
+        <div class="map-col">
+          <a class="map-node" href="/view_employee/">Employees</a>
+          <a class="map-node" href="/admin_ai_intelligence/">AI Signals</a>
+          <a class="map-node" href="/decision_center/">Alerts</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<script>
+let lastEventId = {{ last_event_id|default:0 }};
+function pollEvents() {
+  fetch('/api/workforce/events/?since_id=' + lastEventId)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.events || !data.events.length) return;
+      const list = document.getElementById('pulseList');
+      data.events.slice().reverse().forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'pulse-item';
+        div.innerHTML = '<div class="pulse-time">' + (e.time || '') + '</div>' +
+                         '<div class="pulse-dot ' + e.severity + '"></div>' +
+                         '<div class="pulse-desc">' + e.description + '</div>';
+        list.insertBefore(div, list.firstChild);
+        lastEventId = Math.max(lastEventId, e.id);
+      });
+    })
+    .catch(() => {});
+}
+setInterval(pollEvents, 20000);
+</script>
+{% endblock %}

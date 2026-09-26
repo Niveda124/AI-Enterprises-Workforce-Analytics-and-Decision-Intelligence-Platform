@@ -1,0 +1,286 @@
+{% extends 'admin_index.html' %}
+{% load static %}
+{% block body %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>{% for i in messages %}alert('{{i}}'){% endfor %}</script>
+
+<style>
+  * { box-sizing: border-box; }
+  .dw { padding: 24px; background: #f4f6fb; min-height: 100vh; }
+  .dw-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .dw-header h1 { font-size:26px; font-weight:700; color:#1e1b4b; margin:0; }
+  .dw-header p { color:#6b7280; margin:4px 0 0; font-size:14px; }
+
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; margin-bottom:24px; }
+  .kpi-card { border-radius:16px; padding:20px; box-shadow:0 2px 12px rgba(30,27,75,0.1); transition:transform .2s; color:#fff; }
+  .kpi-card .kpi-label, .kpi-card .kpi-value { color:#fff; }
+  .kpi-c1 { background:linear-gradient(135deg,#6366f1,#4338ca); }
+  .kpi-c2 { background:linear-gradient(135deg,#06b6d4,#0e7490); }
+  .kpi-c3 { background:linear-gradient(135deg,#f59e0b,#b45309); }
+  .kpi-c4 { background:linear-gradient(135deg,#10b981,#047857); }
+  .kpi-c5 { background:linear-gradient(135deg,#8b5cf6,#6d28d9); }
+  .kpi-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(30,27,75,0.1); }
+  .kpi-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .kpi-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff; }
+  .kpi-label { color:#6b7280; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+  .kpi-value { font-size:30px; font-weight:800; color:#1e1b4b; }
+
+  .grid-2 { display:grid; grid-template-columns:1.6fr 1fr; gap:20px; margin-bottom:20px; }
+  @media (max-width:1000px){ .grid-2 { grid-template-columns:1fr; } }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); border:1px solid #eef0f6; }
+  .card h3 { margin:0 0 4px; font-size:16px; color:#1e1b4b; font-weight:700; }
+  .card .sub { color:#9ca3af; font-size:12px; margin-bottom:16px; }
+
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+  @media (max-width:1000px){ .grid-3 { grid-template-columns:1fr; } }
+
+  table.mini { width:100%; border-collapse:collapse; }
+  table.mini th { text-align:left; font-size:11px; text-transform:uppercase; color:#9ca3af; padding:8px 6px; border-bottom:1px solid #eef0f6; }
+  table.mini td { padding:10px 6px; font-size:14px; color:#374151; border-bottom:1px solid #f5f6fa; }
+  .bar-bg { background:#eef0f6; border-radius:8px; height:8px; width:100%; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:8px; background:linear-gradient(90deg,#6366f1,#8b5cf6); }
+
+  .activity-item { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #f5f6fa; align-items:flex-start; }
+  .activity-dot { width:8px; height:8px; border-radius:50%; background:#6366f1; margin-top:6px; flex-shrink:0; }
+  .activity-text { font-size:13px; color:#374151; }
+  .activity-sub { font-size:12px; color:#9ca3af; }
+
+  .dept-chip { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-radius:12px; background:#f8f9fc; margin-bottom:10px; }
+  .rec-item { display:flex; gap:12px; padding:14px 16px; border-radius:12px; margin-bottom:10px; }
+  .rec-danger { background:#fef2f2; border-left:4px solid #ef4444; }
+  .rec-warning { background:#fffbeb; border-left:4px solid #f59e0b; }
+  .rec-success { background:#f0fdf4; border-left:4px solid #10b981; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper dw">
+
+    <div class="dw-header">
+      <div>
+        <h1>Welcome Back, Admin 👋</h1>
+        <p>Here's what's happening across your workforce and projects today.</p>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <a href="/view_department" class="kpi-card kpi-c1" style="text-decoration:none;">
+        <div class="kpi-top"><span class="kpi-label">Departments</span><div class="kpi-icon" style="background:linear-gradient(135deg,#6366f1,#4338ca);"><i class="fa fa-building"></i></div></div>
+        <div class="kpi-value" data-count="{{ Dept }}">0</div>
+      </a>
+      <a href="/view_employee" class="kpi-card kpi-c2" style="text-decoration:none;">
+        <div class="kpi-top"><span class="kpi-label">Employees</span><div class="kpi-icon" style="background:linear-gradient(135deg,#06b6d4,#0e7490);"><i class="fa fa-users"></i></div></div>
+        <div class="kpi-value" data-count="{{ Emp }}">0</div>
+      </a>
+      <a href="/admin_view_new_task" class="kpi-card kpi-c3" style="text-decoration:none;">
+        <div class="kpi-top"><span class="kpi-label">Total Tasks</span><div class="kpi-icon" style="background:linear-gradient(135deg,#f59e0b,#b45309);"><i class="fa fa-tasks"></i></div></div>
+        <div class="kpi-value" data-count="{{ task }}">0</div>
+      </a>
+      <a href="/admin_view_completed_task" class="kpi-card kpi-c4" style="text-decoration:none;">
+        <div class="kpi-top"><span class="kpi-label">Completed</span><div class="kpi-icon" style="background:linear-gradient(135deg,#10b981,#047857);"><i class="fa fa-check-circle"></i></div></div>
+        <div class="kpi-value" data-count="{{ completedtask }}">0</div>
+      </a>
+      <div class="kpi-card kpi-c5">
+        <div class="kpi-top"><span class="kpi-label">Completion Rate</span><div class="kpi-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);"><i class="fa fa-line-chart"></i></div></div>
+        <div class="kpi-value"><span data-count="{{ completion_rate }}">0</span>%</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Task Trend — Last 6 Months</h3>
+        <p class="sub">Total assigned vs completed tasks</p>
+        <div style="position:relative; height:280px;">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Department Distribution</h3>
+        <p class="sub">{{ Emp }} employees across {{ Dept }} departments</p>
+        <div style="position:relative; height:280px;">
+          <canvas id="deptChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <h3>Recent Activity</h3>
+        <p class="sub">Latest task updates</p>
+        {% for t in recent_tasks %}
+        <div class="activity-item">
+          <div class="activity-dot"></div>
+          <div>
+            <div class="activity-text"><b>{{ t.title }}</b> — {{ t.status }}</div>
+            <div class="activity-sub">Assigned to {{ t.emp.user.first_name }} &middot; {{ t.assignDate|date:"d M, H:i" }}</div>
+          </div>
+        </div>
+        {% empty %}
+        <p style="color:#9ca3af;font-size:13px;">No recent task activity yet.</p>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <h3>Top Performing Employees</h3>
+        <p class="sub">Ranked by real task completion rate</p>
+        <table class="mini">
+          <tr><th>#</th><th>Name</th><th>Dept</th><th>Rate</th></tr>
+          {% for p in top_performers %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.dept }}</td>
+            <td>
+              <div class="bar-bg"><div class="bar-fill" style="width:{{ p.rate }}%;"></div></div>
+              <span style="font-size:12px;color:#6b7280;">{{ p.rate }}%</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="text-align:center;color:#9ca3af;">No task data yet.</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h3>Department Performance</h3>
+      <p class="sub">Real completion rate per department</p>
+      {% for d in dept_performance %}
+      <div class="dept-chip">
+        <span style="font-weight:600;color:#1e1b4b;">{{ d.name }}</span>
+        <div style="display:flex;align-items:center;gap:10px;width:60%;">
+          <div class="bar-bg" style="flex:1;"><div class="bar-fill" style="width:{{ d.rate }}%;"></div></div>
+          <span style="font-size:13px;color:#6b7280;width:40px;">{{ d.rate }}%</span>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:#9ca3af;font-size:13px;">No department task data yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h3>🧠 AI Decision Intelligence — Recommendations</h3>
+      {% for r in recommendations %}
+      <div class="rec-item rec-{{ r.level }}">
+        <i class="fa {{ r.icon }}" style="font-size:18px;color:{% if r.level == 'danger' %}#ef4444{% elif r.level == 'warning' %}#f59e0b{% else %}#10b981{% endif %};margin-top:2px;"></i>
+        <span style="font-size:14px;color:#374151;">{{ r.text }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <h3>AI Project Health Score</h3>
+        <div style="position:relative; height:220px; max-width:320px; margin:0 auto;">
+          <canvas id="healthGauge"></canvas>
+        </div>
+      <p style="margin-top:10px;font-size:14px;color:#6b7280;">
+        {{ high_risk_count }} task(s) currently flagged as <b style="color:#ef4444;">High Risk</b>
+      </p>
+    </div>
+
+  </section>
+</section>
+
+<script>
+if (typeof Chart === 'undefined') {
+  document.querySelectorAll('.card').forEach(function(c){
+    var warn = document.createElement('p');
+    warn.style.color = '#ef4444';
+    warn.style.fontSize = '13px';
+    warn.textContent = 'Chart library failed to load — check browser console for the exact network/script error.';
+    c.appendChild(warn);
+  });
+}
+
+document.querySelectorAll('.kpi-value, .kpi-value span').forEach(function(el){
+  var target = parseFloat(el.getAttribute('data-count'));
+  if (isNaN(target)) return;
+  var current = 0;
+  var step = target / 40;
+  var isFloat = target % 1 !== 0;
+  var timer = setInterval(function(){
+    current += step;
+    if (current >= target) { current = target; clearInterval(timer); }
+    el.textContent = isFloat ? current.toFixed(1) : Math.floor(current);
+  }, 25);
+});
+
+Chart.defaults.font.family = "'Roboto', sans-serif";
+
+try {
+  const trendTotal = {{ monthly_total|safe }};
+  const trendCompleted = {{ monthly_completed|safe }};
+  const trendHasData = trendTotal.some(v => v > 0) || trendCompleted.some(v => v > 0);
+  const trendCanvas = document.getElementById('trendChart');
+  if (!trendHasData) {
+    trendCanvas.parentElement.innerHTML = '<p style="color:#9ca3af;text-align:center;padding-top:100px;">No task data available yet</p>';
+  } else {
+    new Chart(trendCanvas, {
+      type: 'line',
+      data: {
+        labels: {{ monthly_labels|safe }},
+        datasets: [
+          { label: 'Total Tasks', data: trendTotal, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.12)', tension: 0.4, fill: true, pointRadius: 4 },
+          { label: 'Completed', data: trendCompleted, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.12)', tension: 0.4, fill: true, pointRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1200 }, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+} catch (e) {
+  document.getElementById('trendChart').parentElement.innerHTML = '<p style="color:#ef4444;">Chart error: ' + e.message + '</p>';
+}
+
+try {
+  const deptCounts = {{ dept_counts|safe }};
+  const deptHasData = deptCounts.some(v => v > 0);
+  const deptCanvas = document.getElementById('deptChart');
+  if (!deptHasData) {
+    deptCanvas.parentElement.innerHTML = '<p style="color:#9ca3af;text-align:center;padding-top:100px;">No department data available yet</p>';
+  } else {
+    new Chart(deptCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: {{ dept_labels|safe }},
+        datasets: [{ data: deptCounts, backgroundColor: ['#6366f1','#06b6d4','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899'], borderWidth: 3, borderColor:'#fff' }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '68%', animation: { animateScale: true, duration: 1200 }, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+} catch (e) {
+  document.getElementById('deptChart').parentElement.innerHTML = '<p style="color:#ef4444;">Chart error: ' + e.message + '</p>';
+}
+
+try {
+new Chart(document.getElementById('healthGauge'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Health', 'Risk'],
+    datasets: [{
+      data: [{{ project_health }}, {{ health_remainder }}],
+      backgroundColor: ['{% if project_health >= 70 %}#10b981{% elif project_health >= 40 %}#f59e0b{% else %}#ef4444{% endif %}', '#e5e7eb'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, circumference: 180, rotation: 270, cutout: '75%',
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    animation: { animateScale: true, duration: 1200 }
+  },
+  plugins: [{
+    id: 'healthText',
+    afterDraw: (chart) => {
+      const {ctx, chartArea: {width, height}} = chart;
+      ctx.save();
+      ctx.font = 'bold 28px Roboto';
+      ctx.fillStyle = '#1e1b4b';
+      ctx.textAlign = 'center';
+      ctx.fillText('{{ project_health }}%', width / 2, height - 10);
+      ctx.restore();
+    }
+  }]
+});
+} catch (e) {
+  document.getElementById('healthGauge').parentElement.innerHTML = '<p style="color:#ef4444;">Chart error: ' + e.message + '</p>';
+}
+</script>
+{% endblock %}

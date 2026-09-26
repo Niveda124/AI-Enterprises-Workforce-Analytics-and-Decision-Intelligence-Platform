@@ -1,0 +1,51 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<style>
+  .ma-wrap { padding:24px; background:#f4f6fb; }
+  .ma-wrap h1 { margin:0 0 16px; font-size:22px; color:#1e1b4b; }
+  .filters { margin-bottom:16px; }
+  .filters a { display:inline-block; padding:7px 14px; border-radius:20px; font-size:12px; font-weight:600; text-decoration:none; color:#4b5563; background:#fff; margin-right:6px; border:1px solid #e2e4ee; }
+  .filters a.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:transparent; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:13px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  .empty { color:#9ca3af; font-size:14px; }
+</style>
+<section id="main-content">
+  <section class="wrapper ma-wrap">
+    <h1>My Activity Timeline</h1>
+    <div class="filters">
+      <a href="?filter=all" class="{% if active_filter == 'all' %}active{% endif %}">All</a>
+      <a href="?filter=tasks" class="{% if active_filter == 'tasks' %}active{% endif %}">Tasks</a>
+      <a href="?filter=projects" class="{% if active_filter == 'projects' %}active{% endif %}">Projects</a>
+      <a href="?filter=ai" class="{% if active_filter == 'ai' %}active{% endif %}">AI</a>
+      <a href="?filter=admin" class="{% if active_filter == 'admin' %}active{% endif %}">Admin</a>
+      <a href="?filter=notifications" class="{% if active_filter == 'notifications' %}active{% endif %}">Notifications</a>
+    </div>
+    <div class="card" id="activityList">
+      {% for e in events %}
+      <div class="timeline-item">
+        <div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div>
+        <div>{{ e.description }}</div>
+      </div>
+      {% empty %}<div class="empty">No activity recorded yet for this filter.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+<script>
+let lastId = {% if events %}{{ events.0.id }}{% else %}0{% endif %};
+setInterval(function() {
+  fetch('/api/my/activity/?since_id=' + lastId).then(r => r.json()).then(data => {
+    if (!data.events || !data.events.length) return;
+    const list = document.getElementById('activityList');
+    data.events.slice().reverse().forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'timeline-item';
+      div.innerHTML = '<div class="timeline-time">' + (e.time || '') + '</div><div>' + e.description + '</div>';
+      list.insertBefore(div, list.firstChild);
+      lastId = Math.max(lastId, e.id);
+    });
+  }).catch(() => {});
+}, 20000);
+</script>
+{% endblock %}

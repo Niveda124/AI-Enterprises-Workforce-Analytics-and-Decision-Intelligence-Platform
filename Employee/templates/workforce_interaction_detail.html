@@ -1,0 +1,96 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .wd-wrap { padding:24px; background:#f4f6fb; }
+  .wd-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .wd-header h1 { margin:0; font-size:20px; color:#1e1b4b; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 16px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; margin-right:6px; margin-bottom:6px; }
+  .btn.secondary { background:linear-gradient(135deg,#9ca3af,#6b7280); }
+  .btn.danger { background:linear-gradient(135deg,#ef4444,#b91c1c); }
+  .btn.success { background:linear-gradient(135deg,#10b981,#047857); }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:18px; }
+  .card h2 { font-size:14px; color:#1e1b4b; margin:0 0 10px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:800px){ .grid2 { grid-template-columns:1fr; } }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px solid #eef0f6; }
+  .msg-box { background:#f8f9fc; border-radius:10px; padding:14px; font-size:13px; margin-top:8px; }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:12px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  textarea { width:100%; min-height:90px; padding:10px; border-radius:8px; border:1px solid #e2e4ee; font-size:13px; box-sizing:border-box; }
+  .empty { color:#9ca3af; font-size:13px; }
+  .signal-chip { display:inline-block; background:#fef2f2; color:#991b1b; border-radius:14px; padding:3px 10px; font-size:11px; margin:2px; }
+</style>
+<section id="main-content">
+  <section class="wrapper wd-wrap">
+    <div class="wd-header">
+      <h1>{{ interaction.subject }}
+        <span class="badge" style="background:{% if interaction.priority == 'URGENT' %}#ef4444{% elif interaction.priority == 'ATTENTION' %}#f59e0b{% else %}#6366f1{% endif %};">{{ interaction.get_priority_display }}</span>
+        <span class="badge" style="background:#9ca3af;">{{ interaction.get_status_display }}</span>
+      </h1>
+      <a href="/workforce_interactions/" class="btn secondary">Back to Interaction Center</a>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Employee &amp; Context</h2>
+        <div class="kv"><span>Employee</span><span><a href="/employee_intelligence/{{ interaction.employee.id }}/">{{ interaction.employee.user.first_name|default:interaction.employee.empid }}</a></span></div>
+        <div class="kv"><span>Type</span><span>{{ interaction.get_interaction_type_display }}</span></div>
+        <div class="kv"><span>Related project</span><span>{% if interaction.related_project %}<a href="/project_intelligence/{{ interaction.related_project.id }}/">{{ interaction.related_project.name }}</a>{% else %}-{% endif %}</span></div>
+        <div class="kv"><span>Related task</span><span>{% if interaction.related_task %}<a href="/task_intelligence/{{ interaction.related_task.id }}/">{{ interaction.related_task.title }}</a>{% else %}-{% endif %}</span></div>
+        <div class="kv"><span>Created</span><span>{{ interaction.created_date|date:"d M Y, H:i" }}</span></div>
+      </div>
+
+      <div class="card">
+        <h2>AI Interpretation <span class="badge" style="background:#9ca3af;">RULE-BASED</span></h2>
+        <div class="kv"><span>Category</span><span><b>{{ interaction.ai_category|default:"-" }}</b></span></div>
+        <div class="kv"><span>Confidence</span><span>{{ interaction.ai_confidence|default:"Not calculated (no calibrated method)" }}</span></div>
+        <p style="font-size:12px;margin-top:8px;">{{ interaction.ai_summary }}</p>
+        {% if impact %}<p style="font-size:12px;color:#b45309;"><b>Potential impact:</b> {{ impact }}</p>{% endif %}
+        <p style="font-size:11px;color:#9ca3af;">This classification is an automated interpretation and may require human review.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Original Message</h2>
+      <div class="msg-box">{{ interaction.message }}</div>
+    </div>
+
+    {% if interaction.employee_response %}
+    <div class="card">
+      <h2>Employee Response</h2>
+      <div class="msg-box">{{ interaction.employee_response }}</div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2>Admin Actions</h2>
+      <form method="post" style="margin-bottom:14px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="respond">
+        <textarea name="admin_response" placeholder="Write a response to the employee..."></textarea>
+        <button type="submit" class="btn" style="margin-top:8px;">Send Response</button>
+      </form>
+      <form method="post" style="display:inline-block;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="set_status">
+        {% for s in next_statuses %}
+          <button type="submit" name="status" value="{{ s }}" class="btn {% if s == 'RESOLVED' %}success{% elif s == 'CLOSED' %}danger{% endif %}">
+            {% if s == 'ACKNOWLEDGED' %}Acknowledge{% elif s == 'IN_PROGRESS' %}Start Investigation{% elif s == 'WAITING_FOR_EMPLOYEE' %}Request More Information{% elif s == 'RESOLVED' %}Resolve{% elif s == 'CLOSED' %}Close{% else %}{{ s }}{% endif %}
+          </button>
+        {% empty %}<span class="empty">No further status transitions from here.</span>{% endfor %}
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Timeline</h2>
+      {% for e in timeline %}
+      <div class="timeline-item">
+        <div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div>
+        <div>{{ e.description }}</div>
+      </div>
+      {% empty %}<div class="empty">No timeline events recorded yet.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,389 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  .wf-wrap { padding:24px; background:#f4f6fb; }
+  .wf-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .wf-header h1 { margin:0; font-size:24px; color:#1e1b4b; }
+  .wf-btn { background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; padding:11px 22px; border:none; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:17px; color:#1e1b4b; margin:0 0 4px; }
+  .card .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  select, input[type=number] { padding:9px 10px; border-radius:8px; border:1px solid #e2e4ee; font-size:13px; min-width:220px; }
+  label { font-size:12px; font-weight:700; color:#4b5563; display:block; margin-bottom:4px; margin-top:10px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:800px){ .grid2 { grid-template-columns:1fr; } }
+  .state-box { background:#f8f9fc; border-radius:12px; padding:14px; }
+  .state-box h3 { margin:0 0 8px; font-size:13px; color:#1e1b4b; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; margin-left:6px; }
+  .badge.real { background:#10b981; }
+  .badge.sim { background:#6366f1; }
+  .badge.notready { background:#9ca3af; }
+  .badge.insufficient { background:#f59e0b; }
+  ul.plain { margin:6px 0; padding-left:18px; font-size:13px; }
+  ul.plain li { margin-bottom:4px; }
+  .warn { color:#b45309; }
+  .rec { color:#0369a1; }
+  .empty { color:#9ca3af; font-size:14px; }
+  .improve { color:#10b981; font-weight:700; }
+  .deteriorate { color:#ef4444; font-weight:700; }
+  .unchanged { color:#9ca3af; }
+  .scenario-fields { display:none; }
+  .scenario-fields.active { display:block; }
+  .kv { display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-bottom:1px solid #eef0f6; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper wf-wrap">
+    <div class="wf-header">
+      <h1>What-If Decision Simulator</h1>
+      <a href="/decision_center/" class="wf-btn" style="background:linear-gradient(135deg,#6366f1,#4338ca);">Back to Decision Center</a>
+    </div>
+
+    <div class="card">
+      <h2>Scenario Builder</h2>
+      <div class="sub">Every number below is either read straight from the database (REAL DATA) or a clearly-labeled deterministic projection (SIMULATED DATA). Risk predictions only appear where an ACTIVE trained model exists.</div>
+
+      <label>Scenario type</label>
+      <select id="scenarioType">
+        <option value="EMPLOYEE_REASSIGNMENT">A. Employee reassignment (Project to Project)</option>
+        <option value="TASK_REASSIGNMENT">B. Task reassignment (Employee to Employee)</option>
+        <option value="WORKLOAD_SCENARIO">C. Workload scenario (increase/decrease)</option>
+        <option value="PROJECT_MEMBERSHIP_CHANGE">D. Project scenario (add/remove employee)</option>
+      </select>
+
+      <div class="scenario-fields active" id="fields-EMPLOYEE_REASSIGNMENT">
+        <label>Employee</label>
+        <select id="er_employee">{% for e in employees %}<option value="{{ e.id }}">{{ e.user.first_name|default:e.empid }}</option>{% endfor %}</select>
+        <label>From project</label>
+        <select id="er_from">{% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select>
+        <label>To project</label>
+        <select id="er_to">{% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select>
+      </div>
+
+      <div class="scenario-fields" id="fields-TASK_REASSIGNMENT">
+        <label>Task (open tasks only)</label>
+        <select id="tr_task">{% for t in tasks %}<option value="{{ t.id }}">#{{ t.id }} - {{ t.title }} ({{ t.emp.empid|default:"unassigned" }})</option>{% endfor %}</select>
+        <label>Reassign to employee</label>
+        <select id="tr_to_employee">{% for e in employees %}<option value="{{ e.id }}">{{ e.user.first_name|default:e.empid }}</option>{% endfor %}</select>
+      </div>
+
+      <div class="scenario-fields" id="fields-WORKLOAD_SCENARIO">
+        <label>Entity type</label>
+        <select id="ws_entity_type">
+          <option value="employee">Employee</option>
+          <option value="project">Project</option>
+        </select>
+        <label>Employee</label>
+        <select id="ws_employee">{% for e in employees %}<option value="{{ e.id }}">{{ e.user.first_name|default:e.empid }}</option>{% endfor %}</select>
+        <label>Project</label>
+        <select id="ws_project" style="display:none;">{% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select>
+        <label>Task count change (negative to decrease)</label>
+        <input type="number" id="ws_delta" value="2">
+      </div>
+
+      <div class="scenario-fields" id="fields-PROJECT_MEMBERSHIP_CHANGE">
+        <label>Project</label>
+        <select id="pm_project">{% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select>
+        <label>Employee</label>
+        <select id="pm_employee">{% for e in employees %}<option value="{{ e.id }}">{{ e.user.first_name|default:e.empid }}</option>{% endfor %}</select>
+        <label>Action</label>
+        <select id="pm_action">
+          <option value="add">Add to project</option>
+          <option value="remove">Remove from project</option>
+        </select>
+      </div>
+
+      {% csrf_token %}
+      <div style="margin-top:18px;"><button class="wf-btn" onclick="runSimulation()">Run Simulation</button></div>
+      <div id="topError" class="warn" style="margin-top:10px;"></div>
+    </div>
+
+    <div id="resultArea" style="display:none;">
+      <div class="card">
+        <h2>Decision Summary</h2>
+        <div class="sub" id="resultDescription"></div>
+        <div id="resultWarnings"></div>
+        <div id="resultRecommendations"></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card state-box">
+          <h3>Baseline (Current State) <span class="badge real">REAL DATA</span></h3>
+          <div id="currentStateBox"></div>
+        </div>
+        <div class="card state-box">
+          <h3>Simulated State <span class="badge sim">SIMULATED DATA</span></h3>
+          <div id="simulatedStateBox"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Baseline vs Simulated — Comparison</h2>
+        <div class="sub">Simulated values are projections, never actual outcomes.</div>
+        <div style="position:relative;height:260px;max-width:600px;"><canvas id="workloadCompareChart"></canvas></div>
+        <div id="diffTable" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>Risk / Model Status</h2>
+        <div id="riskStatusBox"></div>
+        <div style="position:relative;height:220px;max-width:500px;margin-top:10px;" id="riskChartWrap"></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Affected Employees</h3>
+          <div id="affectedEmployees"></div>
+        </div>
+        <div class="card">
+          <h3>Affected Projects</h3>
+          <div id="affectedProjects"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Affected Tasks</h3>
+        <div id="affectedTasks"></div>
+      </div>
+
+      <div class="card">
+        <h2>Explanation</h2>
+        <ul class="plain" id="explanationList"></ul>
+      </div>
+    </div>
+  </section>
+</section>
+
+<script>
+const scenarioSelect = document.getElementById('scenarioType');
+
+// Prompt 9: pre-populate from a Prevention Center / Future Scenario link,
+// only when the query string genuinely maps to a supported scenario —
+// never invents parameters that weren't passed in.
+(function prefillFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const scenario = params.get('scenario');
+  if (!scenario || !document.getElementById('fields-' + scenario)) return;
+  scenarioSelect.value = scenario;
+  document.querySelectorAll('.scenario-fields').forEach(el => el.classList.remove('active'));
+  document.getElementById('fields-' + scenario).classList.add('active');
+  if (scenario === 'WORKLOAD_SCENARIO') {
+    const entityType = params.get('entity_type');
+    const entityId = params.get('entity_id');
+    if (entityType) {
+      document.getElementById('ws_entity_type').value = entityType;
+      document.getElementById('ws_entity_type').dispatchEvent(new Event('change'));
+    }
+    if (entityType === 'employee' && entityId) document.getElementById('ws_employee').value = entityId;
+    if (entityType === 'project' && entityId) document.getElementById('ws_project').value = entityId;
+  } else if (scenario === 'PROJECT_MEMBERSHIP_CHANGE') {
+    const projectId = params.get('project_id');
+    if (projectId) document.getElementById('pm_project').value = projectId;
+  }
+})();
+
+scenarioSelect.addEventListener('change', () => {
+  document.querySelectorAll('.scenario-fields').forEach(el => el.classList.remove('active'));
+  document.getElementById('fields-' + scenarioSelect.value).classList.add('active');
+});
+document.getElementById('ws_entity_type').addEventListener('change', function() {
+  document.getElementById('ws_employee').style.display = this.value === 'employee' ? '' : 'none';
+  document.getElementById('ws_project').style.display = this.value === 'project' ? '' : 'none';
+});
+
+function buildParams(scenarioType) {
+  if (scenarioType === 'EMPLOYEE_REASSIGNMENT') {
+    return { employee_id: document.getElementById('er_employee').value,
+             from_project_id: document.getElementById('er_from').value,
+             to_project_id: document.getElementById('er_to').value };
+  }
+  if (scenarioType === 'TASK_REASSIGNMENT') {
+    return { task_id: document.getElementById('tr_task').value,
+             to_employee_id: document.getElementById('tr_to_employee').value };
+  }
+  if (scenarioType === 'WORKLOAD_SCENARIO') {
+    const entityType = document.getElementById('ws_entity_type').value;
+    return { entity_type: entityType,
+             entity_id: entityType === 'employee' ? document.getElementById('ws_employee').value : document.getElementById('ws_project').value,
+             delta_tasks: document.getElementById('ws_delta').value };
+  }
+  if (scenarioType === 'PROJECT_MEMBERSHIP_CHANGE') {
+    return { project_id: document.getElementById('pm_project').value,
+             employee_id: document.getElementById('pm_employee').value,
+             action: document.getElementById('pm_action').value };
+  }
+  return {};
+}
+
+let workloadChartInstance = null;
+let riskChartInstance = null;
+
+async function runSimulation() {
+  const scenarioType = scenarioSelect.value;
+  const params = buildParams(scenarioType);
+  document.getElementById('topError').textContent = '';
+
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  let resp, data;
+  try {
+    resp = await fetch('/api/decision/what-if/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+      body: JSON.stringify({ scenario_type: scenarioType, params: params }),
+    });
+    data = await resp.json();
+  } catch (e) {
+    document.getElementById('topError').textContent = 'Request failed: ' + e;
+    return;
+  }
+
+  if (data.error) {
+    document.getElementById('topError').textContent = 'Could not run scenario: ' + (data.message || data.error);
+    document.getElementById('resultArea').style.display = 'none';
+    return;
+  }
+
+  renderResult(data);
+}
+
+function renderResult(r) {
+  document.getElementById('resultArea').style.display = 'block';
+  document.getElementById('resultDescription').textContent = r.description || '';
+
+  document.getElementById('resultWarnings').innerHTML = (r.warnings || []).length
+    ? '<ul class="plain">' + r.warnings.map(w => '<li class="warn">' + w + '</li>').join('') + '</ul>' : '';
+  document.getElementById('resultRecommendations').innerHTML = (r.recommendations || []).length
+    ? '<ul class="plain">' + r.recommendations.map(w => '<li class="rec">' + w + '</li>').join('') + '</ul>' : '';
+
+  function labelize(k) { return k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+
+  function renderStateNode(obj) {
+    if (obj === null || obj === undefined) return '<span class="empty">-</span>';
+    if (typeof obj !== 'object') return String(obj);
+    if (Array.isArray(obj)) {
+      if (!obj.length) return '<span class="empty">None</span>';
+      return '<ul class="plain">' + obj.map(v => '<li>' + renderStateNode(v) + '</li>').join('') + '</ul>';
+    }
+    let html = '<div>';
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+        html += '<div style="margin:8px 0 4px;"><b style="font-size:12px;color:#1e1b4b;">' + labelize(k) + '</b>' + renderStateNode(v) + '</div>';
+      } else {
+        html += '<div class="kv"><span>' + labelize(k) + '</span><span><b>' + renderStateNode(v) + '</b></span></div>';
+      }
+    });
+    html += '</div>';
+    return html;
+  }
+  function renderStateCard(containerId, obj) {
+    const container = document.getElementById(containerId);
+    if (!obj || Object.keys(obj).length === 0) { container.innerHTML = '<p class="empty">No data for this scenario.</p>'; return; }
+    container.innerHTML = renderStateNode(obj);
+  }
+  renderStateCard('currentStateBox', r.current_state);
+  renderStateCard('simulatedStateBox', r.simulated_state);
+
+  function classifyChange(key, before, after) {
+    if (before === after) return { cls: 'unchanged', label: 'Unchanged' };
+    const lowerIsBetter = /overdue|pending|risk/i.test(key);
+    const higherIsBetter = /completion_rate|on_time_rate|performance_score/i.test(key);
+    if (lowerIsBetter) return after < before ? { cls: 'improve', label: 'Improvement' } : { cls: 'deteriorate', label: 'Deterioration' };
+    if (higherIsBetter) return after > before ? { cls: 'improve', label: 'Improvement' } : { cls: 'deteriorate', label: 'Deterioration' };
+    return { cls: 'unchanged', label: 'Changed' };
+  }
+
+  const labels = [], before = [], after = [];
+  function walk(obj, prefix) {
+    if (!obj || typeof obj !== 'object') return;
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v && typeof v === 'object' && 'before' in v && 'after' in v && typeof v.before === 'number' && typeof v.after === 'number') {
+        labels.push(prefix + k); before.push(v.before); after.push(v.after);
+      }
+    });
+  }
+  walk(r.workload_impact, '');
+
+  let diffHtml = '<table style="width:100%;font-size:12px;"><tr><th style="text-align:left;">Metric</th><th>Baseline</th><th>Simulated</th><th>Assessment</th></tr>';
+  labels.forEach((lbl, i) => {
+    const c = classifyChange(lbl, before[i], after[i]);
+    diffHtml += '<tr><td>' + labelize(lbl) + '</td><td style="text-align:center;">' + before[i] + '</td><td style="text-align:center;">' + after[i] + '</td><td style="text-align:center;" class="' + c.cls + '">' + c.label + '</td></tr>';
+  });
+  if (!labels.length) diffHtml += '<tr><td colspan="4" class="empty">No directly comparable before/after numeric pair for this scenario.</td></tr>';
+  diffHtml += '</table>';
+  document.getElementById('diffTable').innerHTML = diffHtml;
+
+  const ctx = document.getElementById('workloadCompareChart');
+  if (workloadChartInstance) workloadChartInstance.destroy();
+  if (typeof Chart !== 'undefined' && labels.length) {
+    workloadChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: labels, datasets: [
+        { label: 'Before', data: before, backgroundColor: '#9ca3af' },
+        { label: 'After (simulated)', data: after, backgroundColor: '#6366f1' },
+      ]},
+      options: { responsive: true, maintainAspectRatio: false },
+    });
+  } else if (ctx) {
+    ctx.parentElement.innerHTML = '<p class="empty">No numeric before/after pair to chart for this scenario.</p>';
+  }
+
+  let riskHtml = '';
+  const riskChartWrap = document.getElementById('riskChartWrap');
+  riskChartWrap.innerHTML = '<canvas id="riskChart"></canvas>';
+  let anyOk = false, riskLabels = [], riskBefore = [], riskAfter = [];
+
+  function describeRisk(entry, label) {
+    if (!entry) return '';
+    if (entry.status === 'MODEL_NOT_READY') {
+      return '<div class="kv"><span>' + label + '</span><span class="badge notready">MODEL_NOT_READY</span></div>';
+    }
+    if (entry.status === 'INSUFFICIENT_DATA') {
+      return '<div class="kv"><span>' + label + '</span><span class="badge insufficient">INSUFFICIENT_DATA</span></div>';
+    }
+    if (entry.status === 'OK') {
+      anyOk = true;
+      const cur = entry.current_prediction, sim = entry.simulated_prediction;
+      if (cur && cur.probabilities) {
+        Object.keys(cur.probabilities).forEach(cls => {
+          riskLabels.push(label + ': ' + cls);
+          riskBefore.push(cur.probabilities[cls]);
+          riskAfter.push(sim && sim.probabilities ? (sim.probabilities[cls] || 0) : 0);
+        });
+      }
+      return '<div class="kv"><span>' + label + '</span><span>current: <b>' + (cur ? cur.predicted_outcome : '-') + '</b> to simulated: <b>' + (sim ? sim.predicted_outcome : '-') + '</b></span></div>';
+    }
+    return '';
+  }
+
+  const ri = r.risk_impact || {};
+  Object.keys(ri).forEach(key => { riskHtml += describeRisk(ri[key], key); });
+  document.getElementById('riskStatusBox').innerHTML = riskHtml || '<p class="empty">No risk-model dimension applies to this scenario.</p>';
+
+  if (riskChartInstance) riskChartInstance.destroy();
+  if (anyOk && typeof Chart !== 'undefined') {
+    riskChartInstance = new Chart(document.getElementById('riskChart'), {
+      type: 'bar',
+      data: { labels: riskLabels, datasets: [
+        { label: 'Current probability', data: riskBefore, backgroundColor: '#9ca3af' },
+        { label: 'Simulated probability', data: riskAfter, backgroundColor: '#ef4444' },
+      ]},
+      options: { responsive: true, maintainAspectRatio: false },
+    });
+  } else {
+    riskChartWrap.innerHTML = '<p class="empty">No active model produced a comparable probability for this scenario.</p>';
+  }
+
+  function renderList(id, arr, formatter) {
+    document.getElementById(id).innerHTML = (arr && arr.length)
+      ? '<ul class="plain">' + arr.map(formatter).join('') + '</ul>'
+      : '<p class="empty">None.</p>';
+  }
+  renderList('affectedEmployees', r.affected_employees, e => '<li>' + (e.name || e.employee_id) + '</li>');
+  renderList('affectedProjects', r.affected_projects, p => '<li>' + p.name + (p.change ? ' - ' + p.change : '') + '</li>');
+  renderList('affectedTasks', r.affected_tasks, t => '<li>#' + (t.id || t.task_id) + ' ' + t.title + ' (' + t.status + ')</li>');
+
+  document.getElementById('explanationList').innerHTML = (r.explanation || []).map(e => '<li>' + e + '</li>').join('') || '<li class="empty">No explanation generated.</li>';
+}
+</script>
+{% endblock %}

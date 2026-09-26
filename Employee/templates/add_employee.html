@@ -1,0 +1,106 @@
+{% extends 'admin_index.html' %}
+{% load static %}
+{% block body %}
+<section id="main-content">
+	<section class="wrapper">
+	<div class="form-w3layouts">
+        <!-- page start-->
+        <!-- page start-->
+        <div class="row">
+            <div class="col-lg-12">
+                    <section class="panel">
+                        <header class="panel-heading">
+                            Add Employees
+                        </header>
+                        <div class="panel-body">
+                            <div class="position-center">
+                                <form role="form" method="post" action="" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <select name="departmentid" class="form-control">
+                                        {% for i in deptdata %}
+                                        <option value="{{i.id}}">{{i.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Id</label>
+                                    <input type="text" class="form-control"  placeholder="Enter Employee Id" name="eid" value="{{empmainid}}" readonly>
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Name</label>
+                                    <input type="text" class="form-control" placeholder="Enter FullName" name="name">
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Email</label>
+                                    <input type="email" class="form-control" id="mainid" onblur="check()" placeholder="Enter Email" name="email">
+                                <span id="demo"></span>
+                                     </div>
+
+                                     <div class="form-group">
+                                    <label>Employee Contact Number</label>
+                                    <input type="number" class="form-control" placeholder="Enter Contact" name="contact" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="10" >
+                                </div>
+                                    <div class="form-group">
+                                    <label>Employee Address</label>
+                                    <input type="text" class="form-control"  placeholder="Enter Address" name="address">
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Designation</label>
+                                    <input type="text" class="form-control"  placeholder="Enter Designation" name="designation">
+                                </div>
+                                    <div class="form-group">
+                                    <label >Employee Date of Birth</label>
+                                    <input type="date" class="form-control" placeholder="Enter Dob" name="dob">
+                                </div>
+                                    <div class="form-group">
+                                    <label>Employee Date of Joining</label>
+                                    <input type="date" class="form-control" placeholder="Enter Doj" name="doj">
+                                </div>
+                                <div class="form-group">
+                                    <label>Description(if any)</label>
+                                    <textarea class="form-control" name="description"></textarea>
+                                </div>
+                                    <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" class="form-control" name="password"></input>
+                                </div>
+                                     <div class="form-group">
+                                    <label>Employee Image</label>
+                                    <input type="file" class="form-control" name="img"></input>
+                                </div>
+                                <button type="submit" class="btn btn-info">Add</button>
+                            </form>
+                            </div>
+
+                        </div>
+                    </section>
+
+            </div>
+
+        </div>
+
+    </div>
+    </section>
+</section>
+<script>
+function check(){
+  var mainid = document.getElementById('mainid').value;
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+       var msg = JSON.parse(this.responseText)
+       document.getElementById("demo").innerHTML = msg.message;
+       if(msg.status == true){
+            document.getElementById("demo").style.color = 'green';
+       }else{
+            document.getElementById("demo").style.color = 'red';
+       }
+    }
+  };
+  xhttp.open("GET", "/checkid?mainid="+mainid, true);
+  xhttp.send();
+}
+</script>
+{% endblock %}

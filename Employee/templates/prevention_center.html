@@ -1,0 +1,86 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .pc-wrap { padding:24px; background:linear-gradient(180deg,#f4f6fb 0%,#eef1fb 100%); }
+  .pc-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .pc-header h1 { margin:0; font-size:24px; color:#1e1b4b; }
+  .pc-header .sub { font-size:12px; color:#6b7280; margin-top:4px; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:rgba(255,255,255,0.85); backdrop-filter: blur(6px); border-radius:18px; padding:22px; box-shadow:0 4px 20px rgba(30,27,75,0.08); margin-bottom:20px; border:1px solid rgba(255,255,255,0.6); }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  .summary-row { display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+  .summary-pill { flex:1; min-width:140px; border-radius:14px; padding:16px; text-align:center; color:#fff; }
+  .summary-pill.critical { background:linear-gradient(135deg,#ef4444,#b91c1c); }
+  .summary-pill.warning { background:linear-gradient(135deg,#f59e0b,#b45309); }
+  .summary-pill.watch { background:linear-gradient(135deg,#6366f1,#4338ca); }
+  .summary-pill .n { font-size:28px; font-weight:800; }
+  .summary-pill .l { font-size:11px; text-transform:uppercase; letter-spacing:.05em; opacity:.9; }
+  .situation-chip { display:inline-block; background:#fff; border:1px solid #e2e4ee; border-radius:20px; padding:8px 16px; margin:4px; font-size:12px; }
+  .warning-card { border-left:4px solid #9ca3af; border-radius:10px; padding:14px; margin-bottom:12px; background:#fff; animation: slidein .3s ease; }
+  @keyframes slidein { from { opacity:0; transform: translateX(-6px);} to {opacity:1; transform:translateX(0);} }
+  .warning-card.CRITICAL { border-color:#ef4444; background:#fef2f2; }
+  .warning-card.WARNING { border-color:#f59e0b; background:#fffbeb; }
+  .warning-card.WATCH { border-color:#6366f1; background:#f5f5ff; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .actions a { font-size:11px; margin-right:12px; text-decoration:none; color:#4338ca; font-weight:600; }
+  .empty { color:#9ca3af; font-size:14px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper pc-wrap">
+    <div class="pc-header">
+      <div>
+        <h1>Prevention Center</h1>
+        <div class="sub">AI Early Warning &amp; Prevention Command Center — signals, not guarantees.</div>
+      </div>
+      <a href="/decision_center/" class="btn" style="background:linear-gradient(135deg,#9ca3af,#6b7280);">Decision Center</a>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-pill critical"><div class="n">{{ critical_count }}</div><div class="l">Critical</div></div>
+      <div class="summary-pill warning"><div class="n">{{ warning_count }}</div><div class="l">Warning</div></div>
+      <div class="summary-pill watch"><div class="n">{{ watch_count }}</div><div class="l">Watch</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Emerging Situations</h2>
+      <div class="sub">Grouped by real signal type currently detected across the organization.</div>
+      {% for s in emerging_situations %}
+        <span class="situation-chip">{{ s.signal_type|title }} ({{ s.count }})</span>
+      {% empty %}<div class="empty">No emerging situations detected right now — this is a genuinely quiet state, not a missing feature.</div>{% endfor %}
+    </div>
+
+    <div class="card">
+      <h2>Active Warnings</h2>
+      <div class="sub">Every warning states WHAT, WHY (evidence), and SOURCE. None are guarantees.</div>
+      {% for w in warnings %}
+      <div class="warning-card {{ w.severity }}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <b>{{ w.entity_name }}</b> — {{ w.signal_type|title }}
+            <div style="font-size:11px;color:#6b7280;">{{ w.entity_type|title }} #{{ w.entity_id }}</div>
+          </div>
+          <span class="badge" style="background:{% if w.severity == 'CRITICAL' %}#ef4444{% elif w.severity == 'WARNING' %}#f59e0b{% else %}#6366f1{% endif %};">{{ w.severity }}</span>
+        </div>
+        <ul style="font-size:12px;margin:8px 0;padding-left:18px;">
+          {% for ev in w.evidence %}<li>{{ ev }}</li>{% endfor %}
+        </ul>
+        <div style="font-size:11px;color:#9ca3af;">Source: {{ w.source }} — {{ w.disclaimer }}</div>
+        <div class="actions" style="margin-top:8px;">
+          {% if w.entity_type == 'project' %}
+            <a href="/project_intelligence/{{ w.entity_id }}/">Investigate</a>
+            <a href="/project_intelligence/{{ w.entity_id }}/">View Project</a>
+          {% else %}
+            <a href="/employee_intelligence/{{ w.entity_id }}/">Investigate</a>
+            <a href="/employee_intelligence/{{ w.entity_id }}/">View Employee</a>
+          {% endif %}
+          <a href="/future_scenario/{{ w.entity_type }}/{{ w.entity_id }}/">Possible Future</a>
+          {% if w.whatif_scenario %}<a href="/what_if_simulator/?scenario={{ w.whatif_scenario }}{% if w.whatif_params.entity_type %}&entity_type={{ w.whatif_params.entity_type }}&entity_id={{ w.whatif_params.entity_id }}{% endif %}{% if w.whatif_params.project_id %}&project_id={{ w.whatif_params.project_id }}{% endif %}">Run What-If</a>{% endif %}
+        </div>
+      </div>
+      {% empty %}<div class="empty">NO VERIFIED EARLY WARNING at this time.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

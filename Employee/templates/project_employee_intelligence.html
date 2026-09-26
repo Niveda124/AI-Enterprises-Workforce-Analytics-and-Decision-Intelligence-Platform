@@ -1,0 +1,66 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <p><a href="/project_detail/{{ project.id }}/">&larr; Back to {{ project.name }} Intelligence</a></p>
+    <h2>{{ emp.user.first_name }} — Intelligence on {{ project.name }}</h2>
+
+    <h3>Employee Profile</h3>
+    <p><b>Department:</b> {{ emp.dept.name }} &nbsp; <b>Role on Project:</b> {{ membership.role }} &nbsp; <b>Responsibility:</b> {{ membership.responsibility }}</p>
+
+    <h3>Contribution to this Project</h3>
+    <p><b>Assigned:</b> {{ assigned }} &nbsp; <b>Completed:</b> {{ completed }} &nbsp; <b>Pending:</b> {{ pending }} &nbsp; <b>Overdue:</b> {{ overdue }} &nbsp; <b>Completion Rate:</b> {{ completion_rate }}%</p>
+    <p><b>Workload Status:</b>
+      <span style="padding:3px 10px;border-radius:12px;color:#fff;font-size:12px;
+        background:{% if workload_status == 'Critical' %}#ef4444{% elif workload_status == 'High' %}#fb923c{% elif workload_status == 'Moderate' %}#f59e0b{% else %}#10b981{% endif %};">
+        {{ workload_status }}
+      </span>
+      {% if latest_workload %}(recorded workload score: {{ latest_workload.workload_score }}){% endif %}
+    </p>
+
+    <h3>Performance History</h3>
+    {% if performance_history %}
+    <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+      <tr style="background:#6366f1;color:#fff;"><th style="padding:8px;">Period</th><th style="padding:8px;">Completion Rate</th><th style="padding:8px;">On-Time Rate</th><th style="padding:8px;">Score</th></tr>
+      {% for p in performance_history %}
+      <tr><td style="padding:8px;">{{ p.period }}</td><td style="padding:8px;">{{ p.completion_rate }}%</td><td style="padding:8px;">{{ p.on_time_rate }}%</td><td style="padding:8px;">{{ p.performance_score }}</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<p>No performance history recorded yet.</p>{% endif %}
+
+    <h3>Employee ML Performance Prediction</h3>
+    {% if perf_prediction %}
+      <p><b>Outcome:</b> {{ perf_prediction.predicted_outcome }} — <b>Confidence:</b> {{ perf_prediction.confidence }} — {{ perf_prediction.prediction_date }} — {{ perf_prediction.model_version }}</p>
+    {% else %}<p>Prediction unavailable until a valid ML model is trained.</p>{% endif %}
+
+    <h3>Employee ML Risk Prediction</h3>
+    {% if risk_prediction %}
+      <p><b>Risk:</b> {{ risk_prediction.predicted_outcome }} — <b>Confidence:</b> {{ risk_prediction.confidence }} — {{ risk_prediction.prediction_date }} — {{ risk_prediction.model_version }}</p>
+      {% if risk_prob %}
+      <canvas id="riskProbChart" height="80" style="max-width:350px;"></canvas>
+      <script>
+        new Chart(document.getElementById('riskProbChart'), {
+          type: 'bar',
+          data: { labels: [{% for k, v in risk_prob.items %}"{{ k }}",{% endfor %}], datasets: [{ label: 'Probability', data: [{% for k, v in risk_prob.items %}{{ v }},{% endfor %}], backgroundColor: '#ef4444' }] },
+          options: { responsive: true, scales: { y: { max: 1 } } }
+        });
+      </script>
+      {% endif %}
+      {% if risk_explanation %}
+        <ul>{% for e in risk_explanation %}<li>{{ e.feature }} (importance: {{ e.importance }}, value: {{ e.value }})</li>{% endfor %}</ul>
+      {% endif %}
+    {% else %}<p>Insufficient historical data for reliable prediction.</p>{% endif %}
+
+    <h3>Project Impact</h3>
+    <ul>
+      {% for note in impact_notes %}<li>{{ note }}</li>{% endfor %}
+    </ul>
+
+    <h3>Recommendation</h3>
+    <ul>
+      {% for rec in recommendations %}<li>{{ rec }}</li>{% endfor %}
+    </ul>
+  </section>
+</section>
+{% endblock %}

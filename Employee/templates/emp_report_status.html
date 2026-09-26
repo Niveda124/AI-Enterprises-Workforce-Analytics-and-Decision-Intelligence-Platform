@@ -1,0 +1,32 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<section id="main-content">
+  <section class="wrapper" style="padding:24px;">
+    <div style="background:#fff;border-radius:16px;padding:24px;max-width:500px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+      <h2 style="margin-top:0;">Report My Status</h2>
+      <p style="color:#6b7280;font-size:13px;">Let your admin know if you're on leave, unwell, or unavailable.</p>
+      <form method="post">
+        {% csrf_token %}
+        <label>Reason:</label><br>
+        <select name="reason" required style="padding:8px;width:100%;margin:8px 0;">
+          <option value="Leave">On Leave</option>
+          <option value="Sick">Sick / Not Feeling Well</option>
+          <option value="Other">Other</option>
+        </select><br>
+        <label>Note (optional):</label><br>
+        <textarea name="note" style="padding:8px;width:100%;margin:8px 0;" rows="3"></textarea><br>
+        <button type="submit" style="padding:10px 20px;background:#4338ca;color:#fff;border:none;border-radius:8px;">Submit</button>
+      </form>
+    </div>
+
+    <div style="margin-top:20px;background:#fff;border-radius:16px;padding:24px;max-width:500px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+      <h3>My Recent Reports</h3>
+      {% for s in my_statuses %}
+      <p>{{ s.date }} — <b>{{ s.get_reason_display }}</b>{% if s.note %} — {{ s.note }}{% endif %}</p>
+      {% empty %}
+      <p style="color:#9ca3af;">No status reports yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

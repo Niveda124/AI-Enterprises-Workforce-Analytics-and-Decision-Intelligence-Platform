@@ -1,0 +1,63 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .pp-wrap { padding:24px; background:#f4f6fb; }
+  .pp-header { background:#fff; border-radius:16px; padding:24px; margin-bottom:20px; box-shadow:0 2px 12px rgba(30,27,75,0.06); }
+  .pp-header h1 { margin:0 0 16px; font-size:24px; color:#1e1b4b; }
+  .pp-search { display:flex; gap:10px; }
+  .pp-search input { flex:1; padding:10px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; }
+  .pp-search button { padding:10px 20px; background:#4338ca; color:#fff; border:none; border-radius:8px; font-size:14px; cursor:pointer; }
+
+  .pp-card { background:#fff; border-radius:16px; padding:20px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:14px; transition:transform .15s; }
+  .pp-card:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(30,27,75,0.1); }
+  .pp-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+  .pp-name { font-size:17px; font-weight:700; color:#1e1b4b; }
+  .pp-code { font-size:12px; color:#9ca3af; }
+  .pp-badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; }
+  .pp-meta { display:flex; flex-wrap:wrap; gap:22px; font-size:13px; color:#6b7280; margin-bottom:12px; }
+  .pp-meta b { color:#1e1b4b; display:block; font-size:14px; }
+  .pp-bar-bg { background:#eef0f6; border-radius:8px; height:8px; width:100%; overflow:hidden; margin-bottom:10px; }
+  .pp-bar-fill { height:100%; border-radius:8px; background:linear-gradient(90deg,#6366f1,#8b5cf6); }
+  .pp-view { display:inline-block; padding:7px 16px; background:#eef2ff; color:#4338ca; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; }
+  .pp-priority { font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper pp-wrap">
+    <div class="pp-header">
+      <h1>Project Portfolio</h1>
+      <form method="get" class="pp-search">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search project by name...">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+
+    {% for p in projects %}
+    <div class="pp-card">
+      <div class="pp-top">
+        <div>
+          <div class="pp-name">{{ p.name }}</div>
+          <div class="pp-code">{{ p.code }}</div>
+        </div>
+        <span class="pp-badge" style="background:{% if p.status == 'Completed' %}#10b981{% elif p.status == 'Cancelled' %}#ef4444{% elif p.status == 'Active' %}#6366f1{% elif p.status == 'On Hold' %}#f59e0b{% else %}#9ca3af{% endif %};">{{ p.status }}</span>
+      </div>
+
+      <div class="pp-meta">
+        <div><b>{{ p.dept.name|default:"-" }}</b>Department</div>
+        <div><b>{{ p.manager|default:"Unassigned" }}</b>Manager</div>
+        <div><b><span class="pp-priority" style="background:{% if p.priority == 'Critical' %}#fef2f2;color:#ef4444{% elif p.priority == 'High' %}#fff7ed;color:#f59e0b{% elif p.priority == 'Medium' %}#eff6ff;color:#3b82f6{% else %}#f0fdf4;color:#10b981{% endif %};">{{ p.priority }}</span></b>Priority</div>
+        <div><b>{{ p.deadline|default:"-" }}</b>Deadline</div>
+      </div>
+
+      <div class="pp-bar-bg"><div class="pp-bar-fill" style="width:{{ p.progress }}%;"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:#6b7280;">{{ p.progress }}% complete</span>
+        <a href="/project_detail/{{ p.id }}/" class="pp-view">View Intelligence →</a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="pp-card" style="text-align:center;color:#9ca3af;">No projects found.</div>
+    {% endfor %}
+  </section>
+</section>
+{% endblock %}

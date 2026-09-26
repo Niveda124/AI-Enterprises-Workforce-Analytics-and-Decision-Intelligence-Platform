@@ -1,0 +1,122 @@
+{% extends 'emp_index.html' %}
+{% load static %}
+{% block body %}
+<script>{% for i in messages %}
+alert('{{i}}')
+{% endfor %}
+
+</script>
+<section id="main-content">
+    <section class="wrapper">
+        <div class="table-agile-info">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Task Detail
+                </div>
+
+                    <div class="container">
+                        <div class="row" style="margin-top:3%">
+                            <div class="col-md-3">
+                                <strong> Task Title</strong>
+                            </div>
+                            <div class="col-md-3" style="border-right:4px solid blue;">
+                                {{task.title}}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Task Priority</strong>
+                            </div>
+                            <div class="col-md-3">
+                                {{task.priority}}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong> Task Description</strong>
+                            </div>
+                            <div class="col-md-3" style="border-right:4px solid blue">
+                                {{task.description}}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Employee Final Remark</strong>
+                            </div>
+                            <div class="col-md-3">
+                                {{task.remark}}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong> Task Assign Date</strong>
+                            </div>
+                            <div class="col-md-3" style="border-right:4px solid blue">
+                                {{task.assignDate}}
+                            </div>
+                            <div class="col-md-3">
+                                <strong> Task Finish Date</strong>
+                            </div>
+                            <div class="col-md-3">
+                                {{task.endDate}}
+                            </div>
+                        </div>
+                        <hr>
+                    </div>
+                        <div class="panel-heading" >
+                            Task History
+                        </div>
+                        <hr>
+                <div class="container">
+                        <div class="row">
+                            <div class="col-md-1">
+                                <strong>#</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Remark</strong>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>status</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Task Progress</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Time</strong>
+                            </div>
+                        </div>
+                        <hr>
+                        {% for i in tracker %}
+                        <div class="row">
+                            <div class="col-md-1">
+                                {{forloop.counter}}
+                            </div>
+                            <div class="col-md-3">
+                                {{i.remark}}
+                            </div>
+
+                            <div class="col-md-2">
+                                {{i.status}}
+                            </div>
+                            <div class="col-md-3">
+                                {{i.workCompleted}}
+                            </div>
+                            <div class="col-md-3">
+                                {{i.updationDate}}
+                            </div>
+                        </div>
+                        <hr>
+                        {% endfor %}
+                        {% if task.status != "Completed" %}
+                        <div class="col-md-3" style="margin-bottom:1%;margin-left:40%">
+                            <a href="{% url 'update_task_tracker' task.id %}">
+                                <button class="btn btn-primary">Update Detail</button>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+
+    </section>
+</section>
+{% endblock %}

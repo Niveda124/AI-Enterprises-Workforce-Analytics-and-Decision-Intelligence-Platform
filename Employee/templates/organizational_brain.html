@@ -1,0 +1,112 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .ob-wrap { padding:24px; background:linear-gradient(180deg,#f4f6fb 0%,#eef1fb 100%); }
+  .ob-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .ob-header h1 { margin:0; font-size:24px; color:#1e1b4b; }
+  .ob-header .sub { font-size:12px; color:#6b7280; margin-top:4px; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; margin-left:8px; }
+  .card { background:rgba(255,255,255,0.9); border-radius:18px; padding:22px; box-shadow:0 4px 20px rgba(30,27,75,0.08); margin-bottom:20px; }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  .state-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:14px; margin-bottom:20px; }
+  .state-card { background:#f8f9fc; border-radius:12px; padding:16px; text-align:center; }
+  .state-card .n { font-size:24px; font-weight:800; color:#1e1b4b; }
+  .state-card .l { font-size:11px; color:#6b7280; text-transform:uppercase; }
+  .row { border-left:3px solid #e2e4ee; border-radius:8px; padding:10px 14px; margin-bottom:8px; background:#f8f9fc; font-size:13px; }
+  .row.decision { border-color:#6366f1; } .row.intervention { border-color:#10b981; } .row.pattern { border-color:#f59e0b; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .empty { color:#9ca3af; font-size:13px; }
+  table.dc { width:100%; border-collapse:collapse; font-size:12px; }
+  table.dc th, table.dc td { text-align:left; padding:8px; border-bottom:1px solid #eef0f6; }
+</style>
+<section id="main-content">
+  <section class="wrapper ob-wrap">
+    <div class="ob-header">
+      <div>
+        <h1>Organizational Brain</h1>
+        <div class="sub">Closed decision loop: evidence, decisions, interventions, and observed outcomes — all traced to real records.</div>
+      </div>
+      <div>
+        <a href="/evidence_explorer/" class="btn" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);">Evidence Explorer</a>
+        <a href="/decision_center/" class="btn" style="background:linear-gradient(135deg,#9ca3af,#6b7280);">Decision Center</a>
+      </div>
+    </div>
+
+    <!-- 1. ORGANIZATIONAL MEMORY SUMMARY -->
+    <div class="card">
+      <h2>Organizational Memory</h2>
+      <div class="state-grid">
+        <div class="state-card"><div class="n">{{ evaluation_summary.decisions_recorded }}</div><div class="l">Decisions Recorded</div></div>
+        <div class="state-card"><div class="n">{{ evaluation_summary.interventions_recorded }}</div><div class="l">Interventions Recorded</div></div>
+        <div class="state-card"><div class="n">{{ evaluation_summary.predictions_evaluated }}</div><div class="l">Predictions Evaluated</div></div>
+        <div class="state-card"><div class="n">{{ evaluation_summary.learning_signals_detected }}</div><div class="l">Learning Signals</div></div>
+        <div class="state-card"><div class="n">{{ unresolved_decisions|length }}</div><div class="l">Unresolved Decisions</div></div>
+      </div>
+    </div>
+
+    <!-- 2. RECENT DECISIONS -->
+    <div class="card">
+      <h2>Recent Decisions</h2>
+      <div class="sub">Sourced from AIRecommendation status changes and WorkforceInteraction admin responses — real records only.</div>
+      {% for d in decisions|slice:":10" %}
+      <div class="row decision">
+        <b>{{ d.title }}</b> <span class="badge" style="background:#6366f1;">{{ d.source }}</span> <span class="badge" style="background:#9ca3af;">{{ d.status }}</span>
+        <div style="font-size:11px;color:#9ca3af;">{{ d.entity_name|default:"-" }} &middot; {{ d.created_date|date:"d M, H:i" }}</div>
+        {% if d.entity_type == 'employee' %}<a href="/employee_intelligence/{{ d.entity_id }}/" style="font-size:11px;">Investigate →</a>{% elif d.entity_type == 'project' %}<a href="/project_intelligence/{{ d.entity_id }}/" style="font-size:11px;">Investigate →</a>{% endif %}
+      </div>
+      {% empty %}<div class="empty">NO VERIFIED DATA AVAILABLE</div>{% endfor %}
+    </div>
+
+    <!-- 3. ACTIVE / UNRESOLVED DECISIONS -->
+    <div class="card">
+      <h2>Unresolved Decisions</h2>
+      {% for d in unresolved_decisions|slice:":10" %}
+      <div class="row decision">{{ d.title }} <span class="badge" style="background:#f59e0b;">{{ d.status }}</span></div>
+      {% empty %}<div class="empty">NO VERIFIED DATA AVAILABLE</div>{% endfor %}
+    </div>
+
+    <!-- 4. ACTIVE INTERVENTIONS -->
+    <div class="card">
+      <h2>Intervention History</h2>
+      <div class="sub">Real admin actions only (WorkforceEvent rows with a staff actor) — never a simulation.</div>
+      {% for i in interventions|slice:":10" %}
+      <div class="row intervention">
+        {{ i.description }}
+        <div style="font-size:11px;color:#9ca3af;">by {{ i.admin|default:"admin" }} &middot; {{ i.timestamp|date:"d M, H:i" }}</div>
+      </div>
+      {% empty %}<div class="empty">NO VERIFIED DATA AVAILABLE</div>{% endfor %}
+    </div>
+
+    <!-- 5. PREDICTION -> OUTCOME TRACKING -->
+    <div class="card">
+      <h2>Prediction → Outcome Tracking</h2>
+      {% if prediction_outcome_history.status == 'OK' %}
+        <p style="font-size:13px;">{{ prediction_outcome_history.predictions_with_recorded_outcome }} of {{ prediction_outcome_history.total_predictions_made }} predictions have a recorded actual outcome. Accuracy: {{ prediction_outcome_history.accuracy }}</p>
+        <p style="font-size:11px;color:#9ca3af;">{{ prediction_outcome_history.sample_size_note }}</p>
+        <table class="dc">
+          <tr><th>Type</th><th>Predicted</th><th>Actual</th><th>Correct?</th><th>Entity</th></tr>
+          {% for r in prediction_outcome_history.rows %}
+          <tr><td>{{ r.prediction_type }}</td><td>{{ r.predicted_outcome }}</td><td>{{ r.actual_outcome }}</td><td>{{ r.correct|yesno:"Yes,No" }}</td><td>{{ r.entity }}</td></tr>
+          {% endfor %}
+        </table>
+      {% else %}
+        <div class="empty">INSUFFICIENT OUTCOME DATA — {{ prediction_outcome_history.reason }}</div>
+      {% endif %}
+    </div>
+
+    <!-- 6 & 7. REPEATED PATTERNS / LEARNING SIGNALS -->
+    <div class="card">
+      <h2>Repeated Warning Patterns &amp; Learning Signals</h2>
+      <div class="sub">Observations only — never presented as proven causation.</div>
+      {% for s in repeated_patterns %}
+      <div class="row pattern">
+        <span class="badge" style="background:#f59e0b;">{{ s.pattern }}</span>
+        <p style="margin:6px 0;">{{ s.observation }}</p>
+        <div style="font-size:11px;color:#9ca3af;">Source: {{ s.source }} — {{ s.limitation }}</div>
+      </div>
+      {% empty %}<div class="empty">NO VERIFIED DATA AVAILABLE</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'admin_index.html' %}
+{% load static %}
+{% block body %}
+<script>{% for i in messages %}
+alert('{{i}}')
+{% endfor %}
+</script>
+<section id="main-content">
+	<section class="wrapper">
+		<div class="table-agile-info">
+ <div class="panel panel-default">
+    <div class="panel-heading">
+     View Employee
+    </div>
+    <div>
+      <table class="table" ui-jq="footable" ui-options='{
+        "paging": {
+          "enabled": true
+        },
+        "filtering": {
+          "enabled": true
+        },
+        "sorting": {
+          "enabled": true
+        }}'>
+        <thead>
+          <tr>
+            <th data-breakpoints="xs" style="font-weight:bold;color:black">Sr No.</th>
+            <th style="font-weight:bold;color:black">Department name</th>
+            <th style="font-weight:bold;color:black">Employee Id</th>
+            <th style="font-weight:bold;color:black">Employee name</th>
+            <th style="font-weight:bold;color:black">Employee Email</th>
+            <th style="font-weight:bold;color:black">Employee Contact No.</th>
+            <th style="font-weight:bold;color:black">Date of Joining</th>
+            <th style="font-weight:bold;color:black">Leave Status</th>
+            <th style="font-weight:bold;color:black">Task</th>
+            <th style="font-weight:bold;color:black">Action</th>
+          </tr>
+        </thead>
+          <tbody>
+               {% for i in data %}
+                 <tr data-expanded="true" style="font-weight:bold;color:black">
+                <td>{{forloop.counter}}</td>
+                <td>{{i.dept.name}}</td>
+                <td>{{i.empid}}</td>
+                <td>{{i.user.first_name}}</td>
+                <td>{{i.user.email}}</td>
+                <td>{{i.contact}}</td>
+                <td>{{i.doj}}</td>
+                <td style="width:140px">
+                  {% if i.on_leave %}
+                    <span class="label label-danger" style="padding:5px 8px;">On Leave</span>
+                  {% else %}
+                    <span class="label label-success" style="padding:5px 8px;">Available</span>
+                  {% endif %}
+                  <a href="{% url 'toggle_employee_leave' i.id %}">
+                    <button class="btn {% if i.on_leave %}btn-success{% else %}btn-warning{% endif %} btn-xs" style="margin-top:4px;" title="Toggle leave status">
+                      <i class="fa fa-toggle-{% if i.on_leave %}on{% else %}off{% endif %}"></i> {% if i.on_leave %}Mark Back{% else %}Mark Leave{% endif %}
+                    </button>
+                  </a>
+                </td>
+                          <td style="width:150px">
+                   <a href="{% url 'view_emp_task' i.id %}" ><button class="btn btn-primary" ><i class="fa fa-eye"></i></button></a>
+                          </td>
+                     <td style="width:150px">
+                   <a href="{% url 'edit_employee' i.id %}" ><button class="btn btn-primary" ><i class="fa fa-edit"></i></button></a>
+
+                   <a href="{% url 'delete_employee' i.user.id %}"><button class="btn btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash-o"></i></button></a></td>
+                
+                  </tr>
+                     {% endfor %}
+
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+    </section>
+</section>
+{% endblock %}

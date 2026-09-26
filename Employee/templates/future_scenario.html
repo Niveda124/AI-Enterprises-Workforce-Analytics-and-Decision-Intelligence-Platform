@@ -1,0 +1,91 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .fs-wrap { padding:24px; background:#f4f6fb; }
+  .fs-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .fs-header h1 { margin:0; font-size:22px; color:#1e1b4b; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .rail { position:relative; margin:20px 0; padding-left:30px; }
+  .rail-line { position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:#e2e4ee; }
+  .rail-step { position:relative; margin-bottom:26px; opacity:0; animation: stepin .5s ease forwards; }
+  .rail-step:nth-child(1){animation-delay:.05s;} .rail-step:nth-child(2){animation-delay:.2s;} .rail-step:nth-child(3){animation-delay:.35s;} .rail-step:nth-child(4){animation-delay:.5s;}
+  @keyframes stepin { from {opacity:0; transform:translateX(-8px);} to {opacity:1; transform:translateX(0);} }
+  .rail-dot { position:absolute; left:-30px; top:2px; width:18px; height:18px; border-radius:50%; background:#6366f1; border:3px solid #fff; box-shadow:0 0 0 2px #6366f1; }
+  .rail-label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6366f1; font-weight:800; }
+  .rail-content { background:#f8f9fc; border-radius:12px; padding:14px; margin-top:6px; font-size:13px; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .empty { color:#9ca3af; font-size:13px; }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper fs-wrap">
+    <div class="fs-header">
+      <h1>Possible Future — {{ name }}</h1>
+      <a href="/prevention_center/" class="btn" style="background:linear-gradient(135deg,#9ca3af,#6b7280);">Prevention Center</a>
+    </div>
+
+    <div class="card">
+      <div class="rail">
+        <div class="rail-line"></div>
+
+        <div class="rail-step">
+          <div class="rail-dot"></div>
+          <div class="rail-label">Past</div>
+          <div class="rail-content">
+            {% if past_history %}
+              {% for h in past_history %}<div class="kv"><span>{{ h.period }}</span><span>workload score {{ h.workload_score }}</span></div>{% endfor %}
+            {% else %}<div class="empty">No historical trend recorded for this entity type yet.</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="rail-step">
+          <div class="rail-dot" style="background:#10b981;box-shadow:0 0 0 2px #10b981;"></div>
+          <div class="rail-label">Present State <span class="badge" style="background:#10b981;">REAL DATA</span></div>
+          <div class="rail-content">
+            {% for k, v in current_stats.items %}<div class="kv"><span>{{ k|title }}</span><span>{{ v }}</span></div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="rail-step">
+          <div class="rail-dot" style="background:#f59e0b;box-shadow:0 0 0 2px #f59e0b;"></div>
+          <div class="rail-label">Early Signal</div>
+          <div class="rail-content">
+            {% for w in warnings %}
+              <div style="margin-bottom:8px;">
+                <span class="badge" style="background:{% if w.severity == 'CRITICAL' %}#ef4444{% elif w.severity == 'WARNING' %}#f59e0b{% else %}#6366f1{% endif %};">{{ w.severity }}</span>
+                {{ w.signal_type|title }} — {{ w.evidence|join:" " }}
+                <div style="font-size:11px;color:#9ca3af;">Source: {{ w.source }}</div>
+              </div>
+            {% empty %}<div class="empty">No verified early signal detected for this entity right now.</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="rail-step">
+          <div class="rail-dot" style="background:#6366f1;box-shadow:0 0 0 2px #6366f1;"></div>
+          <div class="rail-label">Possible Future <span class="badge" style="background:#4338ca;">FORECAST, NOT A GUARANTEE</span></div>
+          <div class="rail-content">
+            {% if forecast.available %}
+              {% if forecast.predicted_workload_score %}
+                <p>Active model <b>{{ forecast.model_version }}</b> forecasts a next-period workload score of <b>{{ forecast.predicted_workload_score }}</b> (based on period {{ forecast.based_on_period }}).</p>
+              {% elif forecast.predicted_outcome %}
+                <p>Active model <b>{{ forecast.model_version }}</b> forecasts outcome <b>{{ forecast.predicted_outcome }}</b> (confidence {{ forecast.confidence }}).</p>
+              {% endif %}
+              <p style="font-size:11px;color:#9ca3af;">This is a possible future, not a guaranteed one.</p>
+            {% else %}
+              <div class="empty"><span class="badge" style="background:#9ca3af;">{{ forecast.status }}</span> — no fabricated forecast is shown while this is the case.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <h2 style="margin-bottom:10px;">Preventive Action</h2>
+      <a href="{{ whatif_link }}" class="btn">Run What-If Simulation</a>
+      <p style="font-size:11px;color:#9ca3af;margin-top:10px;">Admin makes the actual decision — nothing here changes real data automatically.</p>
+    </div>
+  </section>
+</section>
+{% endblock %}

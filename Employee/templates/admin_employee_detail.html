@@ -1,0 +1,47 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <h2>{{ emp.user.first_name }} — Intelligence</h2>
+
+    <h3>Performance History</h3>
+    {% if performance %}
+    <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+      <tr style="background:#6366f1;color:#fff;"><th style="padding:8px;">Period</th><th style="padding:8px;">Completion Rate</th><th style="padding:8px;">On-Time Rate</th><th style="padding:8px;">Avg Delay</th><th style="padding:8px;">Score</th></tr>
+      {% for p in performance %}
+      <tr><td style="padding:8px;">{{ p.period }}</td><td style="padding:8px;">{{ p.completion_rate }}%</td><td style="padding:8px;">{{ p.on_time_rate }}%</td><td style="padding:8px;">{{ p.avg_delay_days }}</td><td style="padding:8px;">{{ p.performance_score }}</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<p>No performance history recorded yet.</p>{% endif %}
+
+    <h3>Workload History</h3>
+    {% if workload %}
+    <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+      <tr style="background:#06b6d4;color:#fff;"><th style="padding:8px;">Period</th><th style="padding:8px;">Assigned</th><th style="padding:8px;">Completed</th><th style="padding:8px;">Pending</th><th style="padding:8px;">Overdue</th></tr>
+      {% for w in workload %}
+      <tr><td style="padding:8px;">{{ w.period }}</td><td style="padding:8px;">{{ w.assigned_count }}</td><td style="padding:8px;">{{ w.completed_count }}</td><td style="padding:8px;">{{ w.pending_count }}</td><td style="padding:8px;">{{ w.overdue_count }}</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<p>No workload history recorded yet.</p>{% endif %}
+
+    <h3>Performance Prediction</h3>
+    {% if perf_prediction %}
+      <p><b>Outcome:</b> {{ perf_prediction.predicted_outcome }} — <b>Confidence:</b> {{ perf_prediction.confidence }} — {{ perf_prediction.prediction_date }} — {{ perf_prediction.model_version }}</p>
+    {% else %}<p>Prediction unavailable until a valid ML model is trained.</p>{% endif %}
+
+    <h3>Risk Prediction</h3>
+    {% if risk_prediction %}
+      <p><b>Risk:</b> {{ risk_prediction.predicted_outcome }} — <b>Confidence:</b> {{ risk_prediction.confidence }} — {{ risk_prediction.prediction_date }} — {{ risk_prediction.model_version }}</p>
+      <h4>Why this prediction</h4>
+      {% if risk_explanation %}
+        <ul>{% for e in risk_explanation %}<li>{{ e.feature }} (importance: {{ e.importance }}, value: {{ e.value }})</li>{% endfor %}</ul>
+      {% else %}<p>Detailed explanation is unavailable for this model.</p>{% endif %}
+    {% else %}<p>Prediction unavailable until a valid ML model is trained.</p>{% endif %}
+
+    <h3>AI Recommendations</h3>
+    {% if recommendations %}
+      {% for r in recommendations %}<p>{{ r.recommendation_text }} ({{ r.priority }}, {{ r.status }})</p>{% endfor %}
+    {% else %}<p>No AI recommendations available yet.</p>{% endif %}
+  </section>
+</section>
+{% endblock %}

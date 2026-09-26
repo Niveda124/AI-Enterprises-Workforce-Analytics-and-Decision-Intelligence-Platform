@@ -1,0 +1,108 @@
+<html>
+<head>
+<style>
+  body { font-family: Helvetica, sans-serif; font-size: 11px; color: #1f2937; }
+  .header { background-color: #4338ca; padding: 20px; color: #ffffff; }
+  .header h1 { margin: 0; font-size: 20px; }
+  .header p { margin: 4px 0 0; font-size: 11px; color: #e0e7ff; }
+  .section { padding: 14px 0; }
+  .section h2 { font-size: 14px; color: #4338ca; border-bottom: 2px solid #e0e7ff; padding-bottom: 6px; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  th { background-color: #eef2ff; color: #3730a3; padding: 7px; text-align: left; font-size: 10px; border: 1px solid #e0e7ff; }
+  td { padding: 7px; font-size: 10px; border: 1px solid #eef0f6; }
+  .badge-success { background-color: #d1fae5; color: #047857; padding: 5px 14px; font-weight: bold; font-size: 13px; }
+  .badge-risk { background-color: #fee2e2; color: #b91c1c; padding: 5px 14px; font-weight: bold; font-size: 13px; }
+  .badge-none { background-color: #f3f4f6; color: #6b7280; padding: 5px 14px; font-size: 11px; }
+  .kv-row td:first-child { font-weight: bold; color: #374151; width: 30%; background-color: #f8f9fc; }
+  .footer { font-size: 9px; color: #9ca3af; padding-top: 10px; border-top: 1px solid #eef0f6; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Project Intelligence Report</h1>
+    <p>{{ project.name }} ({{ project.code }}) &nbsp;|&nbsp; Generated {{ generated_on }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Project Summary</h2>
+    <table>
+      <tr class="kv-row"><td>Department</td><td>{{ project.dept.name|default:"-" }}</td></tr>
+      <tr class="kv-row"><td>Manager</td><td>{{ project.manager|default:"Unassigned" }}</td></tr>
+      <tr class="kv-row"><td>Status</td><td>{{ project.status }}</td></tr>
+      <tr class="kv-row"><td>Priority</td><td>{{ project.priority }}</td></tr>
+      <tr class="kv-row"><td>Progress</td><td>{{ project.progress }}%</td></tr>
+      <tr class="kv-row"><td>Deadline</td><td>{{ project.deadline|default:"-" }}</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Team Summary</h2>
+    <table>
+      <tr><th>Employee</th><th>Role</th><th>Responsibility</th></tr>
+      {% for m in team %}
+      <tr><td>{{ m.employee }}</td><td>{{ m.role }}</td><td>{{ m.responsibility }}</td></tr>
+      {% empty %}<tr><td colspan="3">No team members assigned.</td></tr>{% endfor %}
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Task Summary</h2>
+    <table>
+      <tr><th>Total</th><th>Completed</th><th>Pending</th><th>Overdue</th></tr>
+      <tr><td>{{ total_tasks }}</td><td>{{ completed_tasks }}</td><td>{{ pending_tasks }}</td><td>{{ overdue_tasks }}</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>ML Prediction — Project Outcome</h2>
+    {% if prediction %}
+      <p>
+        <span class="{% if prediction.predicted_outcome == 'Success' %}badge-success{% else %}badge-risk{% endif %}">
+          {{ prediction.predicted_outcome }}
+        </span>
+      </p>
+      <table class="kv-row">
+        <tr><td>Confidence</td><td>{{ prediction.confidence }}</td></tr>
+        <tr><td>Risk Level</td><td>{{ prediction.risk_level }}</td></tr>
+        <tr><td>Model Version</td><td>{{ prediction.model_version }}</td></tr>
+        <tr><td>Prediction Date</td><td>{{ prediction.prediction_date }}</td></tr>
+      </table>
+      {% if prob_data %}
+      <table>
+        <tr><th>Class</th><th>Probability</th></tr>
+        {% for k, v in prob_data.items %}<tr><td>{{ k }}</td><td>{% widthratio v 1 100 %}%</td></tr>{% endfor %}
+      </table>
+      {% endif %}
+    {% else %}
+      <p><span class="badge-none">ML prediction not available yet — insufficient historical data.</span></p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Prediction Explanation</h2>
+    {% if explanation_data %}
+    <table>
+      <tr><th>Feature</th><th>Importance</th><th>Current Value</th></tr>
+      {% for e in explanation_data %}<tr><td>{{ e.feature }}</td><td>{{ e.importance }}</td><td>{{ e.value }}</td></tr>{% endfor %}
+    </table>
+    {% else %}
+    <p><span class="badge-none">Detailed explanation unavailable for this model.</span></p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>AI Recommendations</h2>
+    {% if recommendations %}
+      {% for r in recommendations %}
+      <p>&bull; <b>{{ r.recommendation_type|default:"Recommendation" }}:</b> {{ r.recommendation_text }} <i>({{ r.priority }}, {{ r.status }})</i></p>
+      {% endfor %}
+    {% else %}
+      <p><span class="badge-none">No AI recommendations available yet.</span></p>
+    {% endif %}
+  </div>
+
+  <div class="footer">
+    AI Enterprise Workforce Analytics and Decision Intelligence Platform &middot; Generated {{ generated_on }}
+  </div>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .ee-wrap { padding:24px; background:#f4f6fb; }
+  .ee-wrap h1 { margin:0 0 20px; font-size:22px; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:18px; }
+  .card h2 { font-size:15px; color:#1e1b4b; margin:0 0 10px; }
+  select { padding:9px 10px; border-radius:8px; border:1px solid #e2e4ee; font-size:13px; min-width:200px; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:12px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  .empty { color:#9ca3af; font-size:13px; }
+  .chain { display:flex; flex-wrap:wrap; gap:8px; align-items:stretch; }
+  .chain-node { background:#f8f9fc; border-radius:10px; padding:12px; font-size:12px; flex:1; min-width:140px; }
+  .chain-node .lbl { font-size:10px; text-transform:uppercase; color:#6366f1; font-weight:800; margin-bottom:4px; }
+  .chain-arrow { align-self:center; color:#c7c9d9; font-size:16px; }
+</style>
+<section id="main-content">
+  <section class="wrapper ee-wrap">
+    <h1>Evidence Explorer</h1>
+
+    <div class="card">
+      <form method="get">
+        <select name="entity_type">
+          <option value="employee" {% if entity_type == 'employee' %}selected{% endif %}>Employee</option>
+          <option value="project" {% if entity_type == 'project' %}selected{% endif %}>Project</option>
+          <option value="task" {% if entity_type == 'task' %}selected{% endif %}>Task</option>
+        </select>
+        <select name="entity_id">
+          {% for e in employees %}<option value="{{ e.id }}" {% if entity_type == 'employee' and entity_id == e.id|stringformat:"s" %}selected{% endif %}>Employee: {{ e.user.first_name|default:e.empid }}</option>{% endfor %}
+          {% for p in projects %}<option value="{{ p.id }}" {% if entity_type == 'project' and entity_id == p.id|stringformat:"s" %}selected{% endif %}>Project: {{ p.name }}</option>{% endfor %}
+          {% for t in tasks %}<option value="{{ t.id }}" {% if entity_type == 'task' and entity_id == t.id|stringformat:"s" %}selected{% endif %}>Task: {{ t.title }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="btn">Investigate</button>
+      </form>
+    </div>
+
+    {% if error %}<div class="card"><div class="empty">{{ error }}</div></div>{% endif %}
+
+    {% if history %}
+    <div class="card">
+      <h2>Connected Evidence</h2>
+      <h3 style="font-size:13px;">Workforce Events</h3>
+      {% for e in history.events %}
+      <div class="timeline-item"><div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div><div>{{ e.description }}</div></div>
+      {% empty %}<div class="empty">No workforce events found.</div>{% endfor %}
+
+      <h3 style="font-size:13px;margin-top:14px;">Predictions</h3>
+      {% for p in history.predictions %}
+      <div class="timeline-item"><div class="timeline-time">{{ p.prediction_date|date:"d M, H:i" }}</div><div>{{ p.prediction_type }}: <b>{{ p.predicted_outcome }}</b> ({{ p.model_version }})</div></div>
+      {% empty %}<div class="empty">No predictions found.</div>{% endfor %}
+
+      <h3 style="font-size:13px;margin-top:14px;">Interactions</h3>
+      {% for i in history.interactions %}
+      <div class="timeline-item"><div class="timeline-time">{{ i.created_date|date:"d M, H:i" }}</div><div><a href="/workforce_interaction/{{ i.id }}/">{{ i.subject }}</a> ({{ i.get_status_display }})</div></div>
+      {% empty %}<div class="empty">No interactions found.</div>{% endfor %}
+
+      <h3 style="font-size:13px;margin-top:14px;">Recommendations</h3>
+      {% for r in history.recommendations %}
+      <div class="timeline-item"><div class="timeline-time">{{ r.created_date|date:"d M, H:i" }}</div><div>{{ r.recommendation_text|truncatechars:80 }} ({{ r.status }})</div></div>
+      {% empty %}<div class="empty">No recommendations found.</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if impact_chain and not impact_chain.error %}
+    <div class="card">
+      <h2>AI Impact Chain — {{ impact_chain.entity_name }}</h2>
+      <div class="sub">Related evidence, not proven causation. Any stage below may show NOT AVAILABLE if no real record exists.</div>
+      <div class="chain">
+        <div class="chain-node"><div class="lbl">Signal</div>{% if impact_chain.signal != "NOT AVAILABLE" %}{{ impact_chain.signal.signal_type }} ({{ impact_chain.signal.severity }}){% else %}NOT AVAILABLE{% endif %}</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node"><div class="lbl">Evidence</div>{% if impact_chain.evidence != "NOT AVAILABLE" %}{{ impact_chain.evidence|join:"; " }}{% else %}NOT AVAILABLE{% endif %}</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node"><div class="lbl">Prediction</div>{% if impact_chain.prediction != "NOT AVAILABLE" %}{{ impact_chain.prediction.predicted_outcome }} {% if not impact_chain.prediction.model_currently_active %}<span class="badge" style="background:#9ca3af;">MODEL_NOT_READY</span>{% endif %}{% else %}NOT AVAILABLE{% endif %}</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node"><div class="lbl">Simulation</div>{% if impact_chain.simulation != "NOT AVAILABLE" %}{{ impact_chain.simulation|length }} run(s){% else %}NOT AVAILABLE{% endif %}</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node"><div class="lbl">Decision</div>{% if impact_chain.decision != "NOT AVAILABLE" %}{{ impact_chain.decision.title|truncatechars:40 }}{% else %}NOT AVAILABLE{% endif %}</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node"><div class="lbl">Action</div>{% if impact_chain.action != "NOT AVAILABLE" %}{{ impact_chain.action.action_type }}{% else %}NOT AVAILABLE{% endif %}</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node"><div class="lbl">Outcome</div>{% if impact_chain.outcome != "NOT AVAILABLE" and impact_chain.outcome %}{{ impact_chain.outcome.before_score }} → {{ impact_chain.outcome.after_score }}{% else %}NOT AVAILABLE{% endif %}</div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node"><div class="lbl">Learning</div>{{ impact_chain.learning }}</div>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

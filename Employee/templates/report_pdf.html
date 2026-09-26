@@ -1,0 +1,33 @@
+<html>
+<head>
+<style>
+  body { font-family: Helvetica, sans-serif; font-size: 12px; color: #222; }
+  h1 { font-size: 20px; color: #4338ca; margin-bottom: 0; }
+  .sub { color: #666; margin-top: 4px; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+  th { background: #6366f1; color: #fff; padding: 8px; text-align: left; font-size: 11px; }
+  td { padding: 6px 8px; border-bottom: 1px solid #ddd; font-size: 11px; }
+  h2 { font-size: 14px; color: #333; margin-top: 20px; }
+</style>
+</head>
+<body>
+  <h1>AI Workforce Analytics — Report</h1>
+  <p class="sub">Generated on {{ generated_on }}</p>
+
+  <h2>Department Summary</h2>
+  <table>
+    <tr><th>Department</th><th>Employees</th><th>Total Tasks</th><th>Completed</th><th>Completion %</th></tr>
+    {% for d in report_data %}
+    <tr><td>{{ d.dept }}</td><td>{{ d.emp_count }}</td><td>{{ d.total_tasks }}</td><td>{{ d.completed }}</td><td>{{ d.completion_pct }}%</td></tr>
+    {% endfor %}
+  </table>
+
+  <h2>Employee Summary</h2>
+  <table>
+    <tr><th>Emp ID</th><th>Name</th><th>Department</th><th>Total Tasks</th><th>Completed</th></tr>
+    {% for e in emp_data %}
+    <tr><td>{{ e.empid }}</td><td>{{ e.name }}</td><td>{{ e.dept }}</td><td>{{ e.total_tasks }}</td><td>{{ e.completed }}</td></tr>
+    {% endfor %}
+  </table>
+</body>
+</html>

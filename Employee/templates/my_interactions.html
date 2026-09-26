@@ -1,0 +1,48 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<style>
+  .mi-wrap { padding:24px; background:#f4f6fb; }
+  .mi-wrap h1 { margin:0 0 20px; font-size:22px; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:18px; }
+  .card h2 { font-size:15px; color:#1e1b4b; margin:0 0 10px; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eef0f6; font-size:13px; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .empty { color:#9ca3af; font-size:13px; }
+</style>
+<section id="main-content">
+  <section class="wrapper mi-wrap">
+    <h1>My Requests</h1>
+
+    <div class="card">
+      <h2>My Open Requests</h2>
+      {% for i in open %}
+      <div class="row"><a href="/my_interaction/{{ i.id }}/">{{ i.subject }}</a><span class="badge" style="background:#6366f1;">{{ i.get_status_display }}</span></div>
+      {% empty %}<div class="empty">No open requests.</div>{% endfor %}
+    </div>
+    <div class="card">
+      <h2>Waiting for Admin</h2>
+      {% for i in waiting_for_admin %}
+      <div class="row"><a href="/my_interaction/{{ i.id }}/">{{ i.subject }}</a><span class="badge" style="background:#f59e0b;">In Progress</span></div>
+      {% empty %}<div class="empty">Nothing waiting on admin right now.</div>{% endfor %}
+    </div>
+    <div class="card">
+      <h2>Waiting for Me</h2>
+      {% for i in waiting_for_me %}
+      <div class="row"><a href="/my_interaction/{{ i.id }}/">{{ i.subject }}</a><span class="badge" style="background:#ef4444;">Response needed</span></div>
+      {% empty %}<div class="empty">Nothing needs your response.</div>{% endfor %}
+    </div>
+    <div class="card">
+      <h2>Resolved</h2>
+      {% for i in resolved %}
+      <div class="row"><a href="/my_interaction/{{ i.id }}/">{{ i.subject }}</a><span class="badge" style="background:#10b981;">Resolved</span></div>
+      {% empty %}<div class="empty">None yet.</div>{% endfor %}
+    </div>
+    <div class="card">
+      <h2>Closed</h2>
+      {% for i in closed %}
+      <div class="row"><a href="/my_interaction/{{ i.id }}/">{{ i.subject }}</a><span class="badge" style="background:#9ca3af;">Closed</span></div>
+      {% empty %}<div class="empty">None yet.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<style>
+  .mp-wrap { padding:24px; background:#f4f6fb; }
+  .mp-wrap h1 { margin:0 0 20px; font-size:22px; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:800px){ .grid2 { grid-template-columns:1fr; } }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #eef0f6; }
+  .empty { color:#9ca3af; font-size:13px; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+</style>
+<section id="main-content">
+  <section class="wrapper mp-wrap">
+    <h1>My Work Pulse</h1>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Current Workload</h2>
+        <div class="kv"><span>Assigned</span><span>{{ twin.current_workload.assigned }}</span></div>
+        <div class="kv"><span>Completed</span><span>{{ twin.current_workload.completed }}</span></div>
+        <div class="kv"><span>Pending</span><span>{{ twin.current_workload.pending }}</span></div>
+        <div class="kv"><span>Overdue</span><span style="color:{% if twin.current_workload.overdue %}#ef4444{% else %}inherit{% endif %};">{{ twin.current_workload.overdue }}</span></div>
+      </div>
+      <div class="card">
+        <h2>My Active Projects</h2>
+        {% for p in twin.project_involvement %}
+        <div class="kv"><span>{{ p.project_name }}</span><span>{{ p.role }}</span></div>
+        {% empty %}<div class="empty">No active project memberships.</div>{% endfor %}
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>AI Recommendations</h2>
+        {% for r in recommendations %}
+        <div class="kv"><span>{{ r.recommendation_text|truncatechars:60 }}</span><span class="badge" style="background:#6366f1;">{{ r.priority }}</span></div>
+        {% empty %}<div class="empty">No AI recommendations for you right now.</div>{% endfor %}
+      </div>
+      <div class="card">
+        <h2>Warnings &amp; Admin Requests</h2>
+        {% for w in warnings %}
+        <div class="kv"><span>{{ w.title }}</span><span>{{ w.created_date|date:"d M" }}</span></div>
+        {% empty %}<div class="empty">No open warnings.</div>{% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Recently Completed</h2>
+      <div class="kv"><span>Completion rate</span><span>{% if twin.performance_snapshot %}{{ twin.performance_snapshot.completion_rate }}{% else %}No history yet{% endif %}</span></div>
+      <div class="kv"><span>Performance trend</span><span>{{ twin.performance_trend.direction }}</span></div>
+    </div>
+  </section>
+</section>
+{% endblock %}

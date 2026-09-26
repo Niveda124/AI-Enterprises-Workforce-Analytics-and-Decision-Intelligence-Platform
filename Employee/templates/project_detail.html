@@ -1,0 +1,197 @@
+{% extends 'admin_index.html' %}
+{% load static %}
+{% block body %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  .pi-wrap { padding:24px; background:#f4f6fb; }
+  .pi-header { background:#fff; border-radius:16px; padding:24px; margin-bottom:20px; box-shadow:0 2px 12px rgba(30,27,75,0.06); }
+  .pi-header h1 { margin:0 0 4px; font-size:24px; color:#1e1b4b; }
+  .pi-meta { display:flex; flex-wrap:wrap; gap:24px; margin-top:14px; font-size:13px; color:#6b7280; }
+  .pi-meta b { color:#1e1b4b; display:block; font-size:14px; }
+  .pi-badge { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; color:#fff; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h3 { margin:0 0 14px; font-size:16px; color:#1e1b4b; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:1000px){ .grid-2{grid-template-columns:1fr;} }
+  .empty { color:#9ca3af; font-size:14px; padding:20px 0; text-align:center; }
+  .prob-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f5f6fa; font-size:14px; }
+  .driver-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f5f6fa; font-size:13px; }
+  table.pi { width:100%; border-collapse:collapse; }
+  table.pi th { text-align:left; font-size:11px; text-transform:uppercase; color:#9ca3af; padding:8px 6px; border-bottom:1px solid #eef0f6; }
+  table.pi td { padding:10px 6px; font-size:13px; border-bottom:1px solid #f5f6fa; }
+  .rec-card { border-radius:12px; padding:16px; margin-bottom:12px; }
+  .rec-High { background:#fef2f2; border-left:4px solid #ef4444; }
+  .rec-Medium { background:#fffbeb; border-left:4px solid #f59e0b; }
+  .rec-Info { background:#f0fdf4; border-left:4px solid #10b981; }
+  .rec-priority { font-size:11px; font-weight:700; text-transform:uppercase; }
+  .status-Low{color:#10b981;} .status-Moderate{color:#f59e0b;} .status-High{color:#fb923c;} .status-Critical{color:#ef4444;}
+   .pi-badge { font-weight:700; padding:6px 16px; }
+  .pi-header h1 { display:flex; align-items:center; gap:12px; }
+  .pi-meta > div { background:#f8f9fc; padding:10px 16px; border-radius:10px; }
+  .pi-action-btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:12px 24px; border-radius:10px; text-decoration:none; font-weight:600; display:inline-block; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
+  .outcome-badge { display:inline-block; padding:8px 20px; border-radius:10px; font-size:20px; font-weight:800; margin-bottom:12px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper pi-wrap">
+
+    <div class="pi-header">
+      <h1>{{ project.name }} <span class="pi-badge" style="background:{% if project.status == 'Completed' %}#10b981{% elif project.status == 'Cancelled' %}#ef4444{% elif project.status == 'Active' %}#6366f1{% else %}#9ca3af{% endif %};">{{ project.status }}</span></h1>
+      <p style="color:#6b7280;margin:0;">{{ project.description|default:"No description provided." }}</p>
+      <div class="pi-meta">
+        <div><b>{{ project.code|default:"-" }}</b>Project Code</div>
+        <div><b>{{ project.manager|default:"Unassigned" }}</b>Manager</div>
+        <div><b>{{ project.progress }}%</b>Progress</div>
+        <div><b>{{ project.deadline|default:"-" }}</b>Deadline</div>
+        <div><b>{% if days_remaining != None %}{{ days_remaining }} days{% else %}-{% endif %}</b>Remaining</div>
+        <div><b>{% if prediction %}{{ prediction.model_version }}{% else %}Not trained{% endif %}</b>ML Model Version</div>
+        <div><b>{% if prediction %}{{ prediction.prediction_date }}{% else %}-{% endif %}</b>Last Prediction</div>
+      </div>
+      <a href="/project_intelligence_report/{{ project.id }}/" class="pi-action-btn" style="margin-top:16px;font-size:14px;"><i class="fa fa-file-pdf-o"></i> Generate Project Intelligence Report</a>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Project Outcome — Real ML Prediction</h3>
+        {% if prediction and prob_data %}
+          <div class="outcome-badge" style="background:{% if prediction.predicted_outcome == 'Success' %}#d1fae5;color:#047857{% else %}#fee2e2;color:#b91c1c{% endif %};">
+            {% if prediction.predicted_outcome == 'Success' %}✅{% else %}⚠️{% endif %} {{ prediction.predicted_outcome }}
+          </div>
+          {% for k, v in prob_data.items %}
+          <div class="prob-row">
+            <span>{{ k }}</span>
+            <b>{% widthratio v 1 100 %}%</b>
+          </div>
+          {% endfor %}
+          <p style="font-size:12px;color:#9ca3af;margin-top:10px;">Predicted: <b>{{ prediction.predicted_outcome }}</b> &middot; Confidence: {{ prediction.confidence }} &middot; Risk: {{ prediction.risk_level }}</p>
+        {% elif prediction %}
+          <p><b>Predicted Outcome:</b> {{ prediction.predicted_outcome }}</p>
+          <p><b>Confidence:</b> {{ prediction.confidence }} &nbsp; <b>Risk:</b> {{ prediction.risk_level }}</p>
+          <p style="color:#9ca3af;font-size:12px;">Class probability breakdown not stored for this prediction.</p>
+        {% else %}
+          <div class="empty">
+            <i class="fa fa-info-circle"></i> ML prediction unavailable — insufficient historical data.<br>
+            <span style="font-size:12px;">Train the model with completed/cancelled project history, then click "Run Predictions Now" from AI Intelligence.</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h3>Why This Prediction — Model Drivers</h3>
+        {% if prediction_drivers %}
+          {% for d in prediction_drivers %}
+          <div class="driver-row">
+            <span>{{ d.label }} <span style="color:#9ca3af;">(current: {{ d.value }})</span></span>
+            <b>{{ d.importance }}</b>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty">No reliable ML prediction available yet — no driver data to display.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Task Intelligence</h3>
+        {% if total_tasks > 0 %}
+        <p style="font-size:13px;color:#6b7280;">Total: <b>{{ total_tasks }}</b> &nbsp; Completed: <b>{{ completed_tasks }}</b> &nbsp; Pending: <b>{{ pending_tasks }}</b> &nbsp; Overdue: <b>{{ overdue_tasks }}</b> &nbsp; High priority: <b>{{ high_priority_tasks }}</b></p>
+        <p style="font-size:13px;color:#6b7280;">Completion rate: <b>{{ completion_rate }}%</b> &nbsp; Overdue rate: <b>{{ overdue_rate }}%</b></p>
+        <div style="position:relative;height:220px;"><canvas id="taskChart"></canvas></div>
+        {% else %}
+        <div class="empty">No project tasks available.</div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h3>Project Health</h3>
+        {% if health_score != None %}
+        <div style="position:relative;height:220px;"><canvas id="healthGauge"></canvas></div>
+        <p style="text-align:center;font-size:12px;color:#9ca3af;">
+          {% if health_source == 'ml' %}Based on trained ML model confidence{% else %}Data-driven estimate: completion rate minus overdue rate (no trained ML prediction yet){% endif %}
+        </p>
+        {% else %}
+        <div class="empty">No task data available yet — health score cannot be calculated.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Project Team Intelligence</h3>
+      {% if team_rows %}
+      <table class="pi">
+        <tr><th>Employee</th><th>Role</th><th>Assigned</th><th>Completed</th><th>Pending</th><th>Overdue</th><th>Completion</th><th>Performance</th><th>Workload</th><th></th></tr>
+        {% for row in team_rows %}
+        <tr>
+          <td>{{ row.member.employee }}</td>
+          <td>{{ row.member.role }}</td>
+          <td>{{ row.assigned }}</td>
+          <td>{{ row.completed }}</td>
+          <td>{{ row.pending }}</td>
+          <td>{{ row.overdue }}</td>
+          <td>{% if row.completion_rate != None %}{{ row.completion_rate }}%{% else %}-{% endif %}</td>
+          <td>{% if row.performance_score != None %}{{ row.performance_score }}{% else %}No history{% endif %}</td>
+          <td class="status-{{ row.workload_status }}">{{ row.workload_status }}</td>
+          <td><a href="/project_employee_intelligence/{{ project.id }}/{{ row.member.employee.id }}/">View →</a></td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty">No project team members assigned.</div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>AI Recommendations</h3>
+      {% for r in recommendations %}
+      <div class="rec-card rec-{{ r.priority }}">
+        <div class="rec-priority" style="color:{% if r.priority == 'High' %}#ef4444{% elif r.priority == 'Medium' %}#f59e0b{% else %}#10b981{% endif %};">{{ r.priority }} PRIORITY</div>
+        <div style="font-weight:600;color:#1e1b4b;margin:4px 0;">{{ r.issue }}</div>
+        <div style="font-size:13px;color:#374151;"><b>Evidence:</b> {{ r.evidence }}</div>
+        <div style="font-size:13px;color:#374151;"><b>Recommended action:</b> {{ r.action }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card">
+      <h3>Prediction History for this Project</h3>
+      {% if prediction_history %}
+      <ul>{% for h in prediction_history %}<li>{{ h.prediction_date }} — {{ h.predicted_outcome }} (confidence: {{ h.confidence }}, model: {{ h.model_version }})</li>{% endfor %}</ul>
+      {% else %}
+      <div class="empty">No earlier prediction history for this project yet.</div>
+      {% endif %}
+    </div>
+
+  </section>
+</section>
+
+<script>
+try {
+  const statusCounts = {{ task_status_counts|safe }};
+  if (statusCounts.some(v => v > 0)) {
+    new Chart(document.getElementById('taskChart'), {
+      type: 'doughnut',
+      data: { labels: {{ task_status_labels|safe }}, datasets: [{ data: statusCounts, backgroundColor: ['#10b981','#f59e0b','#ef4444'], borderWidth:3, borderColor:'#fff' }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'bottom'}} }
+    });
+  }
+} catch(e) {}
+
+{% if health_score != None %}
+try {
+  new Chart(document.getElementById('healthGauge'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Health','Remaining'],
+      datasets: [{ data: [{{ health_score }}, {{ 100 }} - {{ health_score }}],
+        backgroundColor: ['{% if health_score >= 70 %}#10b981{% elif health_score >= 40 %}#f59e0b{% else %}#ef4444{% endif %}', '#e5e7eb'], borderWidth:0 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, circumference:180, rotation:270, cutout:'75%', plugins:{legend:{display:false},tooltip:{enabled:false}} },
+    plugins: [{ id:'healthText', afterDraw:(chart)=>{ const {ctx,chartArea:{width,height}}=chart; ctx.save(); ctx.font='bold 26px Roboto'; ctx.fillStyle='#1e1b4b'; ctx.textAlign='center'; ctx.fillText('{{ health_score }}%', width/2, height-10); ctx.restore(); } }]
+  });
+} catch(e) {
+  document.getElementById('healthGauge').parentElement.innerHTML = '<p style="color:#ef4444;">Chart error: ' + e.message + '</p>';
+}
+{% endif %}
+</script>
+{% endblock %}

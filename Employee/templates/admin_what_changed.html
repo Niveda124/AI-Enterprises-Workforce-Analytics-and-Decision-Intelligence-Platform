@@ -1,0 +1,44 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .wc-wrap { padding:24px; background:#f4f6fb; }
+  .wc-wrap h1 { margin:0 0 20px; font-size:22px; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  .change-card { border-radius:12px; padding:14px; margin-bottom:10px; background:#f8f9fc; }
+  .arrow-row { display:flex; align-items:center; gap:10px; font-size:12px; margin:6px 0; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:13px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  .empty { color:#9ca3af; font-size:14px; }
+</style>
+<section id="main-content">
+  <section class="wrapper wc-wrap">
+    <h1>What Changed? (Organization-Wide)</h1>
+
+    <div class="card">
+      <h2>Detected Changes</h2>
+      <div class="sub">BEFORE to NOW to CHANGE, drawn from real early-warning evidence.</div>
+      {% for w in warnings %}
+      <div class="change-card">
+        <b>{{ w.entity_name }}</b> ({{ w.entity_type|title }})
+        <div class="arrow-row"><span class="badge" style="background:{% if w.severity == 'CRITICAL' %}#ef4444{% elif w.severity == 'WARNING' %}#f59e0b{% else %}#6366f1{% endif %};">{{ w.severity }}</span> {{ w.signal_type|title }}</div>
+        <ul style="font-size:12px;margin:6px 0;padding-left:18px;">{% for ev in w.evidence %}<li>{{ ev }}</li>{% endfor %}</ul>
+        <a href="{% if w.entity_type == 'project' %}/project_intelligence/{{ w.entity_id }}/{% else %}/employee_intelligence/{{ w.entity_id }}/{% endif %}" style="font-size:12px;">Investigate</a>
+      </div>
+      {% empty %}<div class="empty">No verified changes detected right now.</div>{% endfor %}
+    </div>
+
+    <div class="card">
+      <h2>Raw Recent Events</h2>
+      {% for e in events %}
+      <div class="timeline-item">
+        <div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div>
+        <div>{{ e.description }}</div>
+      </div>
+      {% empty %}<div class="empty">No recorded events yet.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

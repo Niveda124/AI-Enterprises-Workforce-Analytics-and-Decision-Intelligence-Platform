@@ -1,0 +1,48 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <h2>What-if Analysis</h2>
+    <p style="color:#888;">Hypothetical scenario tool — results are not saved as real predictions.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <label>Project:</label>
+      <select name="project_id" required style="padding:8px;">
+        <option value="">-- Select --</option>
+        {% for p in projects %}
+        <option value="{{ p.id }}" {% if selected_project and selected_project.id == p.id %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+      </select><br><br>
+
+      <label>Progress (%):</label>
+      <input type="number" name="progress" min="0" max="100" value="{% if selected_project %}{{ selected_project.progress }}{% endif %}"><br><br>
+
+      <label>Pending Tasks:</label>
+      <input type="number" name="pending_tasks" min="0" value="0"><br><br>
+
+      <label>Overdue Tasks:</label>
+      <input type="number" name="overdue_tasks" min="0" value="0"><br><br>
+
+      <label>Completion Rate (0–1):</label>
+      <input type="number" step="0.01" name="completion_rate" min="0" max="1" value="0.5"><br><br>
+
+      <button type="submit" style="padding:8px 16px;background:#4338ca;color:#fff;border:none;border-radius:6px;">Run Scenario</button>
+    </form>
+
+    {% if result %}
+      {% if result.status == 'ok' %}
+      <div style="background:#fff3cd;border:1px solid #f59e0b;border-radius:10px;padding:16px;margin-top:20px;">
+        <p><b>{{ result.scenario_label }}</b></p>
+        <p><b>Scenario Predicted Outcome:</b> {{ result.predicted_outcome }}</p>
+        <p><b>Scenario Probabilities:</b>
+          {% for k, v in result.probabilities.items %}{{ k }}: {{ v }} &nbsp; {% endfor %}
+        </p>
+      </div>
+      {% else %}
+      <p style="margin-top:20px;">{{ result.message }}</p>
+      {% endif %}
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

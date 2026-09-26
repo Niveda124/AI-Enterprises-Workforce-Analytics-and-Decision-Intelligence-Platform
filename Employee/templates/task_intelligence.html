@@ -1,0 +1,66 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .ti-wrap { padding:24px; background:#f4f6fb; }
+  .ti-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .ti-header h1 { margin:0; font-size:22px; color:#1e1b4b; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #eef0f6; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:13px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  .empty { color:#9ca3af; font-size:13px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper ti-wrap">
+    <div class="ti-header">
+      <h1>Task Intelligence - {{ task.title }}</h1>
+      <a href="/project_intelligence/{{ task.project.id }}/" class="btn">Back to Project</a>
+    </div>
+
+    <div class="card">
+      <h2>Task Overview <span class="badge" style="background:{% if task.status == 'Completed' %}#10b981{% else %}#6366f1{% endif %};">{{ task.status }}</span></h2>
+      <div class="kv"><span>Project</span><span>{% if task.project %}<a href="/project_intelligence/{{ task.project.id }}/">{{ task.project.name }}</a>{% else %}Unassigned{% endif %}</span></div>
+      <div class="kv"><span>Assigned employee</span><span>{% if task.emp %}<a href="/employee_intelligence/{{ task.emp.id }}/">{{ task.emp.user.first_name|default:task.emp.empid }}</a>{% else %}Unassigned{% endif %}</span></div>
+      <div class="kv"><span>Priority</span><span>{{ task.priority }}</span></div>
+      <div class="kv"><span>Created</span><span>{{ task.assignDate|date:"d M Y, H:i" }}</span></div>
+      <div class="kv"><span>Deadline</span><span>{{ task.endDate|date:"d M Y" }}</span></div>
+      <div class="kv"><span>Completion date</span><span>{{ task.completedDate|date:"d M Y, H:i"|default:"Not completed yet" }}</span></div>
+      <div class="kv"><span>Latest remark</span><span>{{ task.remark|default:"-" }}</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Task Risk Intelligence</h2>
+      {% if risk_available %}
+        <div class="kv"><span>Risk level</span><span><b>{{ risk_label }}</b></span></div>
+        <div class="kv"><span>Risk score (rule-based, 0-100)</span><span>{{ risk_score }}</span></div>
+      {% else %}
+        <div class="empty"><span class="badge" style="background:#9ca3af;">NOT_AVAILABLE</span> - task already completed; no risk intelligence is calculated once a task is done.</div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Tracking History</h2>
+      {% for t in tracking_history %}
+      <div class="timeline-item">
+        <div class="timeline-time">{{ t.updationDate|date:"d M, H:i" }}</div>
+        <div>Status change: {{ t.status }}{% if t.remark %} - "{{ t.remark }}"{% endif %} {% if t.workCompleted %}({{ t.workCompleted }} work update){% endif %}</div>
+      </div>
+      {% empty %}<div class="empty">No tracking updates recorded yet.</div>{% endfor %}
+    </div>
+
+    <div class="card">
+      <h2>Related Timeline (Workforce Events)</h2>
+      {% for e in timeline %}
+      <div class="timeline-item">
+        <div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div>
+        <div>{{ e.description }}</div>
+      </div>
+      {% empty %}<div class="empty">No recorded workforce events for this task yet.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

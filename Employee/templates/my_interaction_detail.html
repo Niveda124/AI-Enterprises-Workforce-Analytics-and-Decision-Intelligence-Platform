@@ -1,0 +1,62 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<style>
+  .id-wrap { padding:24px; background:#f4f6fb; }
+  .id-wrap h1 { margin:0 0 20px; font-size:20px; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:18px; }
+  .card h2 { font-size:14px; color:#1e1b4b; margin:0 0 10px; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px solid #eef0f6; }
+  .msg-box { background:#f8f9fc; border-radius:10px; padding:14px; font-size:13px; margin-top:8px; }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:12px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  textarea { width:100%; min-height:90px; padding:10px; border-radius:8px; border:1px solid #e2e4ee; font-size:13px; box-sizing:border-box; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:10px 20px; border:none; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; margin-top:10px; }
+  .empty { color:#9ca3af; font-size:13px; }
+</style>
+<section id="main-content">
+  <section class="wrapper id-wrap">
+    <h1>{{ interaction.subject }}
+      <span class="badge" style="background:#6366f1;">{{ interaction.get_priority_display }}</span>
+      <span class="badge" style="background:#9ca3af;">{{ interaction.get_status_display }}</span>
+    </h1>
+
+    <div class="card">
+      <h2>Your Original Message</h2>
+      <div class="msg-box">{{ interaction.message }}</div>
+      <div class="kv"><span>Type</span><span>{{ interaction.get_interaction_type_display }}</span></div>
+      <div class="kv"><span>Related project</span><span>{{ interaction.related_project.name|default:"-" }}</span></div>
+      <div class="kv"><span>Related task</span><span>{{ interaction.related_task.title|default:"-" }}</span></div>
+      <div class="kv"><span>Submitted</span><span>{{ interaction.created_date|date:"d M Y, H:i" }}</span></div>
+    </div>
+
+    {% if interaction.admin_response %}
+    <div class="card">
+      <h2>Admin Response</h2>
+      <div class="msg-box">{{ interaction.admin_response }}</div>
+    </div>
+    {% endif %}
+
+    {% if can_respond %}
+    <div class="card">
+      <h2>Your Response</h2>
+      <form method="post">
+        {% csrf_token %}
+        <textarea name="employee_response" placeholder="e.g. I can access it now / I still need help..."></textarea>
+        <button type="submit" class="btn">Send Response</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2>Timeline</h2>
+      {% for e in timeline %}
+      <div class="timeline-item">
+        <div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div>
+        <div>{{ e.description }}</div>
+      </div>
+      {% empty %}<div class="empty">No timeline events recorded yet.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <h2>My Projects</h2>
+    {% for row in project_rows %}
+    <div style="background:#fff;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      <h3>{{ row.project.name }} <small style="color:#888;">({{ row.project.status }})</small></h3>
+      <p><b>My Role:</b> {{ row.role }} — {{ row.responsibility }}</p>
+      <p><b>Progress:</b> {{ row.project.progress }}% &nbsp; <b>Deadline:</b> {{ row.project.deadline }}</p>
+      <p><b>Team:</b> {% for m in row.team %}{{ m.employee }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      <p><b>My Tasks on this Project:</b></p>
+      <ul>
+        {% for t in row.my_tasks %}
+        <li>{{ t.title }} — {{ t.status }}</li>
+        {% empty %}
+        <li>No tasks assigned on this project yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% empty %}
+    <p>You are not currently assigned to any project.</p>
+    {% endfor %}
+  </section>
+</section>
+{% endblock %}

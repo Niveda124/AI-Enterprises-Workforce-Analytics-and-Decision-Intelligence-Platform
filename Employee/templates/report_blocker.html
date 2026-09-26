@@ -1,0 +1,51 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<style>
+  .rb-wrap { padding:24px; background:#f4f6fb; }
+  .rb-wrap h1 { margin:0 0 20px; font-size:22px; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); max-width:640px; }
+  label { font-size:12px; font-weight:700; color:#4b5563; display:block; margin-bottom:4px; margin-top:14px; }
+  select, input[type=text], textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #e2e4ee; font-size:13px; box-sizing:border-box; }
+  textarea { min-height:100px; }
+  .btn { background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fff; padding:11px 22px; border:none; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; margin-top:18px; }
+  .msg { padding:10px; border-radius:8px; margin-bottom:14px; font-size:13px; }
+  .msg.success { background:#f0fdf4; color:#166534; } .msg.error { background:#fef2f2; color:#991b1b; }
+</style>
+<section id="main-content">
+  <section class="wrapper rb-wrap">
+    <h1>Report a Blocker</h1>
+    <div class="card">
+      {% if messages %}{% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}{% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <label>Type of blocker</label>
+        <select name="blocker_type">
+          <option>Technical problem</option>
+          <option>Waiting for dependency</option>
+          <option>Access problem</option>
+          <option>Requirement unclear</option>
+          <option>Waiting for approval</option>
+          <option>Task dependency</option>
+          <option>Deadline concern</option>
+          <option>Other</option>
+        </select>
+        <label>Subject</label>
+        <input type="text" name="subject" required>
+        <label>Description</label>
+        <textarea name="message" required placeholder="Describe the blocker in detail..."></textarea>
+        <label>Related Project (optional)</label>
+        <select name="related_project">
+          <option value="">-- None --</option>
+          {% for p in my_projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+        <label>Related Task (optional)</label>
+        <select name="related_task">
+          <option value="">-- None --</option>
+          {% for t in my_tasks %}<option value="{{ t.id }}">{{ t.title }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="btn">Submit Blocker</button>
+      </form>
+    </div>
+  </section>
+</section>
+{% endblock %}

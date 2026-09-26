@@ -1,0 +1,441 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+
+
+<!-- Mirrored from www.smarteyeapps.com/demo/dental-hospitl-medical/ by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 21 May 2022 10:44:49 GMT -->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title> Employee Task Management System</title>
+
+    <link rel="shortcut icon" href="{% static 'assets/images/fav.html' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/fontawsom-all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.carousel.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.theme.default.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/
+font-awesome/5.15.2/css/all.min.css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}">
+    <style>
+        :root{
+            --aiw-dark:#152119;
+            --aiw-dark2:#1f3327;
+            --aiw-gold:#c9a24b;
+            --aiw-cream:#f6f1e6;
+            --aiw-text:#233129;
+        }
+        .aiw-navbar{background:var(--aiw-dark);padding:14px 0;}
+        .aiw-navbar .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+        .aiw-brand{display:flex;align-items:center;color:#fff;}
+        .aiw-brand .aiw-logo-icon{width:38px;height:38px;border-radius:50%;background:var(--aiw-gold);color:var(--aiw-dark);display:flex;align-items:center;justify-content:center;margin-right:10px;font-size:16px;}
+        .aiw-brand .aiw-brand-text h5{margin:0;font-weight:700;letter-spacing:1px;font-size:15px;color:#fff;}
+        .aiw-brand .aiw-brand-text small{color:#c9c9c9;font-size:11px;}
+        .aiw-nav-links{display:flex;flex-wrap:wrap;list-style:none;margin:0;padding:0;}
+        .aiw-nav-links li{margin:0 10px;}
+        .aiw-nav-links li a{color:#eae7de;font-size:14px;text-decoration:none;}
+        .aiw-nav-links li a:hover{color:var(--aiw-gold);}
+        .aiw-login-btn{background:var(--aiw-gold);color:var(--aiw-dark)!important;border:none;padding:8px 18px;border-radius:4px;font-weight:600;font-size:14px;}
+        .aiw-login-btn:hover{opacity:0.9;color:var(--aiw-dark);}
+        .aiw-hero-left{background:var(--aiw-cream);padding:80px 60px;display:flex;flex-direction:column;justify-content:center;}
+        .aiw-eyebrow{color:var(--aiw-gold);letter-spacing:2px;font-size:12px;font-weight:700;text-transform:uppercase;}
+        .aiw-hero-left h1{color:var(--aiw-text);font-weight:700;margin:16px 0;font-size:38px;}
+        .aiw-hero-left p{color:#5a6359;margin-bottom:26px;max-width:480px;}
+        .aiw-btn-primary{background:var(--aiw-dark);color:#fff;padding:12px 22px;border-radius:4px;font-weight:600;border:none;}
+        .aiw-btn-primary:hover{background:var(--aiw-dark2);color:#fff;}
+        .aiw-btn-outline{background:transparent;border:1px solid var(--aiw-text);color:var(--aiw-text);padding:12px 22px;border-radius:4px;font-weight:600;margin-left:12px;}
+        .aiw-btn-outline:hover{background:var(--aiw-text);color:#fff;}
+        .aiw-hero-right{background:linear-gradient(135deg,var(--aiw-dark2),var(--aiw-dark));min-height:420px;display:flex;align-items:center;justify-content:center;padding:40px;}
+        .aiw-hero-overlay{border:1px solid rgba(201,162,75,0.5);padding:30px;text-align:center;color:#fff;max-width:320px;}
+        .aiw-hero-overlay .aiw-hero-icon{width:56px;height:56px;border-radius:50%;background:rgba(201,162,75,0.15);color:var(--aiw-gold);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:22px;}
+        .aiw-hero-overlay p{font-size:17px;line-height:1.6;margin:0;}
+        .aiw-hero-overlay p span{color:var(--aiw-gold);font-weight:700;}
+        .aiw-intel{background:var(--aiw-dark);padding:60px 0;text-align:center;}
+        .aiw-intel h2{color:#fff;font-weight:600;max-width:700px;margin:14px auto 40px;font-size:22px;}
+        .aiw-intel-card{background:var(--aiw-dark2);border-radius:6px;padding:30px 20px;height:100%;}
+        .aiw-intel-card .aiw-icon{width:46px;height:46px;border-radius:50%;background:rgba(201,162,75,0.15);color:var(--aiw-gold);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:18px;}
+        .aiw-intel-card h5{color:#fff;font-size:14px;font-weight:700;margin-bottom:10px;}
+        .aiw-intel-card p{color:#b9c0ba;font-size:13px;margin:0;}
+        .aiw-bottom-strip{background:#fff;text-align:center;padding:26px 20px;}
+        .aiw-bottom-strip .aiw-icon{width:44px;height:44px;border-radius:50%;background:var(--aiw-cream);color:var(--aiw-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+        .aiw-bottom-strip h3{color:var(--aiw-text);font-size:16px;font-weight:600;margin:0;}
+        @media(max-width:991px){
+            .aiw-hero-left{padding:50px 24px;}
+            .aiw-hero-right{min-height:260px;padding:30px 20px;}
+            .aiw-nav-links{justify-content:center;margin:12px 0;}
+        }
+    </style>
+</head>
+
+    <body>
+<script>{% for i in messages %}
+alert('{{i}}')
+{% endfor %}
+</script>
+    <!-- ################# AI Workforce Nav Starts Here#######################--->
+    <nav class="aiw-navbar">
+        <div class="container">
+            <a href="/" class="aiw-brand">
+                <div class="aiw-logo-icon"><i class="fas fa-user-friends"></i></div>
+                <div class="aiw-brand-text">
+                    <h5>AI WORKFORCE</h5>
+                    <small>Analytics &amp; Decision Intelligence Platform</small>
+                </div>
+            </a>
+            <ul class="aiw-nav-links">
+                <li><a href="index-2.html">Home</a></li>
+                <li><a href="/#about">About Us</a></li>
+                <li><a href="/#service">Services</a></li>
+                <li><a href="/#blog">Blog</a></li>
+                <li><a href="/#gallery">Gallery</a></li>
+                <li><a href="/#contact">Contact Us</a></li>
+                <li><a href="/login_admin">Admin</a></li>
+                <li><a href="/login_emp">Employee</a></li>
+            </ul>
+            <div class="dropdown">
+                <button class="aiw-login-btn dropdown-toggle" type="button" id="navLoginDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navLoginDropdown">
+                    <a class="dropdown-item" href="/login_admin">Go to Admin Login</a>
+                    <a class="dropdown-item" href="/login_emp">Go to Employee Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ################# AI Workforce Hero Starts Here#######################--->
+    <section class="aiw-hero">
+        <div class="container-fluid p-0">
+            <div class="row no-gutters">
+                <div class="col-lg-6 aiw-hero-left">
+                    <span class="aiw-eyebrow">Data. People. Intelligence. Impact.</span>
+                    <h1>AI Workforce Analytics &amp; Decision Intelligence Platform</h1>
+                    <p>Turn workforce data into powerful insights, make smarter decisions, and build a future-ready organization with the power of AI.</p>
+                    <div class="aiw-hero-buttons">
+                        <div class="dropdown d-inline-block">
+                            <button class="aiw-btn-primary dropdown-toggle" type="button" id="heroLoginDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-sign-in-alt"></i> Login to Platform
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="heroLoginDropdown">
+                                <a class="dropdown-item" href="/login_admin">Go to Admin Login</a>
+                                <a class="dropdown-item" href="/login_emp">Go to Employee Login</a>
+                            </div>
+                        </div>
+                        <a href="/#about" class="aiw-btn-outline"><i class="fas fa-info-circle"></i> About the Project</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 aiw-hero-right">
+                    <div class="aiw-hero-overlay">
+                        <div class="aiw-hero-icon"><i class="fas fa-users"></i></div>
+                        <p><span>Empowering</span> People.<br><span>Driving</span> Performance.<br><span>Enabling</span> Better Decisions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ################# Intelligence That Works For You Starts Here#######################--->
+    <section class="aiw-intel">
+        <div class="container">
+            <span class="aiw-eyebrow">Intelligence That Works For You</span>
+            <h2>A unified platform to analyze, predict, and act — for a smarter and more efficient workforce.</h2>
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="aiw-intel-card">
+                        <div class="aiw-icon"><i class="fas fa-brain"></i></div>
+                        <h5>AI-Powered Insights</h5>
+                        <p>Discover hidden patterns and predict future workforce trends with advanced AI.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="aiw-intel-card">
+                        <div class="aiw-icon"><i class="fas fa-users"></i></div>
+                        <h5>Workforce Intelligence</h5>
+                        <p>Get a 360&deg; view of your workforce and improve performance across teams.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="aiw-intel-card">
+                        <div class="aiw-icon"><i class="fas fa-bullseye"></i></div>
+                        <h5>Smart Decisions</h5>
+                        <p>Make confident, data-driven decisions that accelerate organizational success.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="aiw-intel-card">
+                        <div class="aiw-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h5>Future Ready</h5>
+                        <p>Build an adaptive, agile, and resilient organization ready for the future.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ################# Bottom Strip Starts Here#######################--->
+    <div class="aiw-bottom-strip">
+        <div class="aiw-icon"><i class="fas fa-user-friends"></i></div>
+        <h3>Better Insights. Better Decisions. Better Tomorrow.</h3>
+    </div>
+
+    <!-- ################# Key Features Starts Here#######################--->
+
+   <section class="key-features kf-2" id="service" style="background-color:#26104d">
+        <div class="container">
+
+            <div class="row">
+                <div class="col-md-4 col-sm-6">
+                    <div class="single-key">
+                        <i class="fas fa-hospital-alt"></i>
+                        <h5>IMPROVED WORKFORCE MANAGEMENT</h5>
+                        <p>If you operate a startup of under a dozen, relying on manual systems to track and handle the staff will turn rapidly into there are high chances of human errors as well as to some compliance risks.</p>        </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="single-key">
+                        <i class="fas fa-user-md"></i>
+                        <h5>ENSURE COMPLIANCE</h5>
+                        <p>Employers have other legal and regulator management and employees. Some employee management systems also have a feature that warns you, alerts you by sending a notification before when a particular record needs to be updated.</p>    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="single-key">
+                        <i class="fas fa-briefcase-medical"></i>
+                        <h5>EMPLOYEE ENGAGEMENT</h5>
+                        <p>Management systems for workers also offer ways that improve workplace motivation and potentially affect productivity.Resources such as performance management monitoring and evaluating the progress of workers,</p>  </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="single-key">
+                        <i class="fas fa-capsules"></i>
+                        <h5>KEEPS YOUR EMPLOYEE INFORMATION SAFE</h5>
+                        <p>. It will provide you with two-factor authentication, security measures, and data encryption features to protect your employees and yourself from any kind of insider threats, and hackers</p>   </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="single-key">
+                        <i class="fas fa-prescription-bottle-alt"></i>
+                        <h5>TIME AND PRODUCTIVITY MEASUREMENT </h5>
+                        <p>As a company owner, you might be thinking of how to manage employees and track their time and productivity levels? To help you in this, you can use an excellent time tracking and productivity measure software. </p> </div>
+                </div>
+
+
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="single-key">
+                        <i class="far fa-thumbs-up"></i>
+                        <h5>Efficiency And Better Accuracy</h5>
+                        <p>mplementing an EMS framework for workers is equivalent to pushing mountains for a company and that is really important when it comes to handling a remote workforce.Employee engagement systems are structured to accurately monitor, </p>  </div>
+                </div>
+            </div>
+
+
+
+
+
+
+        </div>
+
+    </section>
+    <!-- ################# With Medical Starts Here#######################--->
+
+    <section class="with-medical" id="about">
+        <div class="container">
+            <div class="row">
+               <div class="col-lg-6 col-md-12">
+                    <img src="{% static 'assets/images/happy-employees.jpg' %}" alt="">
+                </div>
+                <div class="col-lg-6 col-md-12 txtr">
+                    <h4>WHY IS EMS NECESSARY FOR YOUR BUSINESS?<br>
+                     <span>Smart Employee Management System</span>
+                    </h4>
+                    <p>Picture a situation in which any piece of critical data related to the most valuable assets, i.e. workers, is available through a centralized database on a single dashboard and is usable 24 x 7 at lightning speed. This is basically what a successful employee management system provides – a centralized hub for all your vital payroll data and HR.</p>
+                    <p>EMS helps to eliminate the manual process and saves a lot of time and money. This system maintains the professional and personal details of the employees and the company in a safe manner.</p>   </div>
+                
+            </div>
+        </div>
+    </section>
+    
+    
+     <!-- ################# Clinic Number Starts Here#######################--->
+
+
+    <div class="doctor-message">
+        <div class="inner-lay">
+            <div class="container">
+               <div class="row session-title">
+                   <h2>Smart Employee in numbers</h2>
+                   <p>Employee management tools may be divided into various categories, depending on the particular field of the market within which they are configured and designed.
+
+                       Employee management systems can save the management and HR staff from time-consuming administrative tasks so they can concentrate on the innovation which is needed to drive the business to the next level.</p> </div>
+                <div class="row">
+                    <div class="col-sm-3 numb">
+                        <h3>12+</h3>
+                        <span>YEARS OF EXPEREANCE</span>
+                    </div>
+                    <div class="col-sm-3 numb">
+                        <h3>212+</h3>
+                        <span>HAPPY CLIENTS</span>
+                    </div>
+                    <div class="col-sm-3 numb">
+                        <h3>52+</h3>
+                        <span>QUALIFIED EMPLOYEES</span>
+                    </div>
+                    <div class="col-sm-3 numb">
+                        <h3>18+</h3>
+                        <span>AWARD WINNING</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    
+    <!--  ************************* Blog Starts Here ************************** -->
+            <div class="blog" id="blog" style="background-color:#FFF">
+               <div class="row session-title">
+                   <h2>Latest Blog</h2>
+                   <p>If you operate a startup of under a dozen workers or are in control of a thousand-strong global multinational corporation, relying on manual systems to track and handle the staff will turn rapidly into an administrative nightmare. Also, if you opt to track the information and data manually, there are high chances of human errors as well as to some compliance risks.</p>
+               </div>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-12">
+                            <div class="blog-singe no-margin row">
+                                <div class="col-sm-5 blog-img-tab">
+                                    <img src="{% static 'assets/images/OIP.jpg' %}" alt="">
+                                </div>
+                                <div class="col-sm-7 blog-content-tab">
+                                    <h2>Why Employee Management Is Needed</h2>
+                                    <p><i class="fas fa-user"><small>Resource Management</small></i>  <i class="fas fa-eye"><small>(12)</small></i>  <i class="fas fa-comments"><small>(12)</small></i></p>
+                                    <p class="blog-desic">Proper time tracking from the web, mobile apps, desktop that duly records every single activity done by your employees. You can also have automated screenshots of your employee’s screen within set time intervals.</p>
+                                    <a href="blog_single.html">Read More <i class="fas fa-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-12">
+                            <div class="blog-singe no-margin row">
+                                <div class="col-sm-5 blog-img-tab">
+                                    <img src="{% static 'assets/images/img1.jpg' %}" alt="">
+                                </div>
+                                <div class="col-sm-7 blog-content-tab">
+                                    <h2>Why Employee Management Is Needed ?</h2>
+                                    <p><i class="fas fa-user"><small>Time Management</small></i>  <i class="fas fa-eye"><small>(12)</small></i>  <i class="fas fa-comments"><small>(12)</small></i></p>
+                                    <p class="blog-desic">The HR program often takes complete control of staff time off, workplace self-service and manager self-service for workers to boost demands, management acceptance workflows, team time-off reports and the whole company.</p>
+                                    <a href="blog_single.html">Read More <i class="fas fa-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+        <!-- ######## Blog End ####### -->
+        
+         <!-- ################# Our Team Starts Here#######################--->
+    <section class="our-team" id="gallery" style="background-color:#26104d">
+        <div class="container">
+            <div class="inner-title row">
+                <h2>Our Team</h2>
+                <p>Take a look at our Team</p>
+            </div>
+            <div class="row">
+                <div class="col-md-3 col-sm-6">
+                    <div class="container" >
+                        <img src="{% static 'assets/images/team1.jpg' %}" style="width:250px;height:250px">
+
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="single-usr">
+                        <img src="{% static 'assets/images/team2.jpg' %}" style="width:250px;height:250px">
+
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="single-usr">
+                        <img src="{% static 'assets/images/team3.jpg' %}" style="width:250px;height:250px">
+
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="single-usr">
+                        <img src="{% static 'assets/images/team4.jpg' %}" style="width:250px;height:250px">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </section>
+    
+    
+    <!-- ################# Footer Starts Here#######################--->
+
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 col-sm-12">
+                    <h2 style="color:White">About Us</h2>
+                    <p>An employee management system is a distributed system developed to maintain the employee details and the company workflow process systematically.
+
+                        EMS helps to eliminate the manual process and saves a lot of time and money. This system maintains the professional and personal details of the employees and the company in a safe manner. The employee management system lowers the burden and the pressure on HRs and the business managers. Thanks to the technology which offers us a plethora of solutions which makes the work easier and faster.</p></div>
+                <div class="col-md-4 col-sm-12">
+                    <h2>Useful Links</h2>
+                    <ul class="list-unstyled link-list">
+                        <li><a ui-sref="about" href="#/about">About us</a><i class="fa fa-angle-right"></i></li>
+                        <li><a ui-sref="portfolio" href="#/portfolio">Portfolio</a><i class="fa fa-angle-right"></i></li>
+                        <li><a ui-sref="products" href="#/products">Latest jobs</a><i class="fa fa-angle-right"></i></li>
+                        <li><a ui-sref="gallery" href="#/gallery">Gallery</a><i class="fa fa-angle-right"></i></li>
+                        <li><a ui-sref="contact" href="#/contact">Contact us</a><i class="fa fa-angle-right"></i></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-sm-12 map-img" id="contact">
+                    <h2>Contact Us</h2>
+                    <address class="md-margin-bottom-40">
+                        BlueDart <br>
+                        Marthandam (K.K District) <br>
+                        Tamil Nadu, IND <br>
+                        Phone: +91 9159669599 <br>
+                        Email: <a href="mailto:info@anybiz.com" class="">info@bluedart.in</a><br>
+                        Web: <a href="smart-eye.html" class="">www.bluedart.in</a>
+                    </address>
+
+                </div>
+            </div>
+        </div>
+        
+
+    </footer>
+    <div class="copy">
+            <div class="container">
+                <a href="https://www.smarteyeapps.com/">2015 &copy; All Rights Reserved | Designed and Developed by SmartEmployeeManagementSystem</a>
+                
+                <span>
+                <a><i class="fab fa-github"></i></a>
+                <a><i class="fab fa-google-plus-g"></i></a>
+                <a><i class="fab fa-pinterest-p"></i></a>
+                <a><i class="fab fa-twitter"></i></a>
+                <a><i class="fab fa-facebook-f"></i></a>
+
+        </span>
+            </div>
+
+        </div>
+    
+    </body>
+
+<script src="{% static 'assets/js/jquery-3.2.1.min.js' %}"></script>
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/plugins/scroll-fixed/jquery-scrolltofixed-min.js' %}"></script>
+<script src="{% static 'assets/plugins/slider/js/owl.carousel.min.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+
+
+
+<!-- Mirrored from www.smarteyeapps.com/demo/dental-hospitl-medical/ by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 21 May 2022 10:45:02 GMT -->
+</html>

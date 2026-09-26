@@ -1,0 +1,57 @@
+{% extends 'admin_index.html' %}
+{% load static %}
+{% block body %}
+<script>{% for i in messages %}
+alert('{{i}}')
+{% endfor %}
+</script>
+<section id="main-content">
+	<section class="wrapper">
+		<div class="table-agile-info">
+ <div class="panel panel-default">
+    <div class="panel-heading">
+     View Department
+    </div>
+    <div>
+      <table class="table" ui-jq="footable" ui-options='{
+        "paging": {
+          "enabled": true
+        },
+        "filtering": {
+          "enabled": true
+        },
+        "sorting": {
+          "enabled": true
+        }}'>
+        <thead>
+          <tr>
+            <th data-breakpoints="xs" style="font-weight:bold;color:black">ID</th>
+            <th style="font-weight:bold;color:black">Department name</th>
+            <th style="font-weight:bold;color:black">Creation Date</th>
+            <th style="font-weight:bold;color:black">Action</th>
+          </tr>
+        </thead>
+          <tbody>
+               {% for i in data %}
+                 <tr data-expanded="true" style="font-weight:bold;color:black">
+                <td>{{i.id}}</td>
+                <td>{{i.name}}</td>
+                <td>{{i.create_date}}</td>
+                     <td style="width:150px">
+                   <a href="{% url 'update_department' i.id %}" ><button class="btn btn-primary" ><i class="fa fa-edit"></i></button></a>
+
+                   <a href="{% url 'delete_department' i.id %}"><button class="btn btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash-o"></i></button></a></td>
+
+                  </tr>
+                     {% endfor %}
+
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+    </section>
+</section>
+{% endblock %}

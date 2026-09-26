@@ -1,0 +1,82 @@
+{% extends 'admin_index.html' %}
+{% load static %}
+{% block body %}
+   <section id="main-content">
+	<section class="wrapper">
+		<div class="table-agile-info">
+ <div class="panel panel-default">
+    <div class="panel-heading">
+ Search Employee
+    </div>
+    <div>
+                   <div class="panel-body">
+                            <div class="position-center">   <form method="POST" action="">
+        {% csrf_token %}
+                        <div class="row">
+                        <div class="col-md-6">
+        <label><h4>Employee Id</h4></label>
+
+        <input type="text" name="empid" required class="form-control"></div>
+
+        <div>
+            <button type="submit" class="btn btn-warning btn-lg" style="margin-top:1%">View</button>
+        </div>
+                        </div>
+        </form>
+
+                            </div>
+                   </div><hr>
+					<!-- /Page Header -->
+{% if data %}  <table class="table" ui-jq="footable" ui-options='{
+        "paging": {
+          "enabled": true
+        },
+        "filtering": {
+          "enabled": true
+        },
+        "sorting": {
+          "enabled": true
+        }}'>          <h4 align="center" style="color:blue">Employe Id : {{empId}}</h4>
+        <hr>
+
+        <thead>
+          <tr>
+            <th data-breakpoints="xs" style="font-weight:bold;color:black">Sr No.</th>
+            <th style="font-weight:bold;color:black">Department name</th>
+            <th style="font-weight:bold;color:black">Employee Id</th>
+            <th style="font-weight:bold;color:black">Employee name</th>
+            <th style="font-weight:bold;color:black">Employee Email</th>
+            <th style="font-weight:bold;color:black">Employee Contact No.</th>
+            <th style="font-weight:bold;color:black">Date of Joining</th>
+            <th style="font-weight:bold;color:black">Action</th>
+          </tr>
+        </thead>
+          <tbody>
+         
+                 <tr data-expanded="true" style="font-weight:bold;color:black">
+                <td>1</td>
+                <td>{{data.dept.name}}</td>
+                <td>{{data.empid}}</td>
+                <td>{{data.user.first_name}}</td>
+                <td>{{data.user.email}}</td>
+                <td>{{data.contact}}</td>
+                <td>{{data.doj}}</td>
+                     <td style="width:150px">
+                   <a href="{% url 'edit_employee' data.id %}" ><button class="btn btn-primary" ><i class="fa fa-edit"></i></button></a>
+
+                   <a href="{% url 'delete_employee' data.user.id %}"><button class="btn btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash-o"></i></button></a></td>
+
+                  </tr>
+
+
+
+        </tbody>
+      </table>
+                    {% endif %}
+				</div>
+</div>
+
+        </div>
+    </section>
+   </section>
+{% endblock %}

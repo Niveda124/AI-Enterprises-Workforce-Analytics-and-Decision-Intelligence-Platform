@@ -1,0 +1,447 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  .dc-wrap { padding:24px; background:#f4f6fb; }
+  .dc-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .dc-header h1 { margin:0; font-size:24px; color:#1e1b4b; }
+  .dc-btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:11px 22px; border-radius:10px; text-decoration:none; font-weight:600; font-size:14px; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:22px; }
+  .kpi { background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(30,27,75,0.06); }
+  .kpi .lbl { font-size:11px; text-transform:uppercase; color:#9ca3af; font-weight:700; }
+  .kpi .val { font-size:26px; font-weight:800; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:17px; color:#1e1b4b; margin:0 0 4px; }
+  .card .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  .signal { border-radius:12px; padding:16px; margin-bottom:14px; border-left:5px solid #9ca3af; background:#f8f9fc; }
+  .signal.High { border-color:#ef4444; background:#fef2f2; }
+  .signal.Medium { border-color:#f59e0b; background:#fffbeb; }
+  .signal.Low { border-color:#10b981; background:#f0fdf4; }
+  .signal.CRITICAL { border-color:#ef4444; background:#fef2f2; }
+  .signal.WARNING { border-color:#f59e0b; background:#fffbeb; }
+  .signal.WATCH { border-color:#6366f1; background:#f5f5ff; }
+  .signal-top { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  .signal-title { font-weight:700; font-size:15px; color:#1e1b4b; }
+  .badge { padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; color:#fff; }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px solid #eef0f6; }
+  .stale-tag { color:#b45309; font-size:11px; font-weight:600; }
+  .driver-row { display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-bottom:1px solid #eee; }
+  table.dc { width:100%; border-collapse:collapse; }
+  table.dc th { text-align:left; font-size:11px; text-transform:uppercase; color:#9ca3af; padding:8px 6px; border-bottom:1px solid #eef0f6; }
+  table.dc td { padding:8px 6px; font-size:13px; border-bottom:1px solid #f5f6fa; }
+  .empty { color:#9ca3af; font-size:14px; padding:14px 0; }
+  details summary { cursor:pointer; font-size:13px; color:#4338ca; font-weight:600; margin-top:10px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper dc-wrap">
+    <div class="dc-header">
+      <h1>AI Decision Intelligence Center</h1>
+      <div style="display:flex;gap:10px;">
+        <a href="/refresh_ai_analysis/" class="dc-btn">🔄 Run AI Analysis</a>
+        <a href="/whatif_analysis/" class="dc-btn" style="background:linear-gradient(135deg,#f59e0b,#b45309);">🧪 What-If Analysis</a>
+        <a href="/what_if_simulator/" class="dc-btn" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);">🧭 What-If Simulator</a>
+      </div>
+    </div>
+
+    <!-- 1. EXECUTIVE AI OVERVIEW -->
+    <div class="kpi-grid">
+      <div class="kpi"><div class="lbl">Active Projects</div><div class="val">{{ active_projects_count }}</div></div>
+      <div class="kpi"><div class="lbl">Employees Analyzed</div><div class="val">{{ employees_count }}</div></div>
+      <div class="kpi"><div class="lbl">High-Risk Signals</div><div class="val" style="color:#ef4444;">{{ high_risk_count }}</div></div>
+      <div class="kpi"><div class="lbl">Projects w/ Prediction</div><div class="val">{{ projects_with_prediction }}</div></div>
+      <div class="kpi"><div class="lbl">Employees w/ Prediction</div><div class="val">{{ employees_with_prediction }}</div></div>
+      <div class="kpi"><div class="lbl">Open AI Decisions</div><div class="val">{{ open_recommendations }}</div></div>
+      <div class="kpi"><div class="lbl">Active Models</div><div class="val">{{ active_models_count }}</div></div>
+      <div class="kpi"><div class="lbl">Last Trained</div><div class="val" style="font-size:14px;">{{ last_training_date|date:"d M Y"|default:"Never" }}</div></div>
+    </div>
+
+    <!-- NOTIFICATIONS / ALERTS -->
+    <div class="card" id="notifCard">
+      <h2>Notifications &amp; Alerts <span class="badge" style="background:#6366f1;">{{ unread_notification_count }} unread</span></h2>
+      <div class="sub">Real events only — leave/status reports, task assignments, and overdue-project alerts.</div>
+      {% if unread_notifications %}
+      <table class="dc" id="notifTable">
+        {% for n in unread_notifications %}
+        <tr id="notif-row-{{ n.id }}">
+          <td style="font-weight:700;">{{ n.title }}</td>
+          <td style="font-size:12px;">{{ n.message }}</td>
+          <td style="font-size:11px;color:#9ca3af;">{{ n.created_date|date:"d M, H:i" }}</td>
+          <td>
+            {% if n.related_employee %}<a href="/admin_employee_detail/{{ n.related_employee.id }}/">View employee</a>{% endif %}
+            {% if n.related_project %}<a href="/project_detail/{{ n.related_project.id }}/">View project</a>{% endif %}
+          </td>
+          <td><button class="dc-btn" style="padding:6px 12px;font-size:11px;" onclick="markNotificationRead({{ n.id }})">Mark read</button></td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}<div class="empty">No unread notifications.</div>{% endif %}
+    </div>
+
+    <!-- DECISION INTELLIGENCE SUMMARY -->
+    <div class="card">
+      <h2>Decision Intelligence Summary</h2>
+      <div class="sub">Only values backed by actual data — a metric shows "Not available" rather than a guess.</div>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="lbl">Workforce Health</div>
+          <div class="val" style="font-size:18px;">
+            {% if workforce_twin.org_task_stats.total_tasks %}{% widthratio workforce_twin.org_task_stats.completed_tasks workforce_twin.org_task_stats.total_tasks 100 %}% complete{% else %}No task data{% endif %}
+          </div>
+          <div style="font-size:11px;color:#9ca3af;">{{ workforce_twin.employee_count }} employees &middot; {{ workforce_twin.org_task_stats.overdue_tasks }} overdue tasks</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Project Health</div>
+          <div class="val" style="font-size:18px;">{{ workforce_twin.project_status_breakdown.Active|default:0 }} active</div>
+          <div style="font-size:11px;color:#9ca3af;">{{ workforce_twin.project_count }} total projects</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Active Model Status</div>
+          <div class="val" style="font-size:14px;">
+            {% for name, active in workforce_twin.active_models.items %}
+              <span class="badge" style="background:{% if active %}#10b981{% else %}#9ca3af{% endif %};margin:2px;">{{ name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Anomalies</div>
+          <div class="val" style="color:{% if anomaly_summary.status == 'OK' and anomaly_summary.anomaly_count > 0 %}#ef4444{% else %}#1e1b4b{% endif %};">
+            {% if anomaly_summary.status == 'OK' %}{{ anomaly_summary.anomaly_count }}{% else %}—{% endif %}
+          </div>
+          <div style="font-size:11px;color:#9ca3af;">{% if anomaly_summary.status != 'OK' %}{{ anomaly_summary.status }}{% else %}of {{ anomaly_summary.evaluated_count }} evaluated{% endif %}</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">High-Risk Items</div>
+          <div class="val" style="color:#ef4444;">{{ high_risk_count }}</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Pending Alerts</div>
+          <div class="val">{{ unread_notification_count }}</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Recent AI Recommendations</div>
+          <div class="val">{{ open_recommendations }} open</div>
+        </div>
+        <div class="kpi">
+          <div class="lbl">Skill Roles Tracked</div>
+          <div class="val">{{ skill_coverage.total_roles_seen }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANOMALY DETECTION PANEL -->
+    <div class="card">
+      <h2>Anomaly Detection</h2>
+      <div class="sub">Real IsolationForest run over each employee's current Performance/Workload snapshot — never fabricated.</div>
+      {% if anomaly_summary.status == 'OK' %}
+        {% if anomaly_summary.anomalies %}
+        <table class="dc">
+          <tr><th>Employee</th><th>Anomaly Score</th><th>Severity</th><th>Affected Metrics (current snapshot)</th><th></th></tr>
+          {% for a in anomaly_summary.anomalies %}
+          <tr>
+            <td>{{ a.name }}</td>
+            <td>{{ a.anomaly_score }}</td>
+            <td><span class="badge" style="background:{% if a.anomaly_score < -0.1 %}#ef4444{% elif a.anomaly_score < 0 %}#f59e0b{% else %}#9ca3af{% endif %};">{% if a.anomaly_score < -0.1 %}High{% elif a.anomaly_score < 0 %}Medium{% else %}Low{% endif %}</span></td>
+            <td style="font-size:11px;">
+              completion {{ a.snapshot.completion_rate }} &middot; on-time {{ a.snapshot.on_time_rate }} &middot;
+              overdue {{ a.snapshot.overdue_count }} &middot; workload {{ a.snapshot.load_workload_score }}
+            </td>
+            <td><a href="/admin_employee_detail/{{ a.employee_id }}/">Investigate →</a></td>
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}<div class="empty">No statistical outliers detected in the current workforce.</div>{% endif %}
+      {% else %}
+        <div class="empty">{{ anomaly_summary.status }} — {{ anomaly_summary.reason }}</div>
+      {% endif %}
+    </div>
+
+    <!-- EXPLAINABLE AI PANEL -->
+    <div class="card">
+      <h2>Explainable AI</h2>
+      <div class="sub">Why the top current high-risk signals are what they are — factors are the model's own feature importances, trend vs. the previous stored prediction.</div>
+      {% if explainable_highlights %}
+        {% for h in explainable_highlights %}
+        <div class="signal {{ h.signal.risk_level }}">
+          <div class="signal-top">
+            <div class="signal-title">
+              {% if h.signal.entity_type == 'project' %}📁 {{ h.signal.entity.name }}{% else %}👤 {{ h.signal.entity.user.first_name|default:h.signal.entity.empid }}{% endif %}
+            </div>
+            {% if h.explanation.available %}
+              <span class="badge" style="background:#4338ca;">{{ h.explanation.model_version }}</span>
+            {% else %}
+              <span class="badge" style="background:#9ca3af;">{{ h.explanation.reason|default:"MODEL_NOT_READY" }}</span>
+            {% endif %}
+          </div>
+          {% if h.explanation.available %}
+            <p style="font-size:13px;margin-top:8px;">{{ h.explanation.summary }}</p>
+            {% if h.explanation.trend.available %}
+              <p style="font-size:12px;color:{% if h.explanation.trend.risk_level_changed %}#b45309{% else %}#6b7280{% endif %};">
+                Trend vs {{ h.explanation.trend.previous_prediction_date|date:"d M" }}: previous outcome was "{{ h.explanation.trend.previous_outcome }}"
+                {% if h.explanation.trend.outcome_changed %}(changed){% else %}(unchanged){% endif %}.
+              </p>
+            {% else %}
+              <p style="font-size:12px;color:#9ca3af;">No earlier prediction exists for this entity yet — trend not available.</p>
+            {% endif %}
+            <p style="font-size:12px;"><a href="{% if h.signal.entity_type == 'project' %}/project_detail/{{ h.signal.entity.id }}/{% else %}/admin_employee_detail/{{ h.signal.entity.id }}/{% endif %}">Open full intelligence →</a></p>
+          {% else %}
+            <div class="empty">{{ h.explanation.reason }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}<div class="empty">No high-risk signals currently require explanation.</div>{% endif %}
+    </div>
+
+    <!-- FUTURE PROTECTION (Prompt 9) -->
+    <div class="card">
+      <h2>Future Protection</h2>
+      <div class="sub">Early warnings only — not guarantees. <a href="/prevention_center/">Open full Prevention Center →</a></div>
+      <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+        <span class="badge" style="background:#ef4444;">{{ future_protection_summary.critical }} Critical</span>
+        <span class="badge" style="background:#f59e0b;">{{ future_protection_summary.warning }} Warning</span>
+        <span class="badge" style="background:#6366f1;">{{ future_protection_summary.watch }} Watch</span>
+      </div>
+      {% for w in future_warnings %}
+      <div class="signal {{ w.severity }}" style="margin-bottom:8px;">
+        <div class="signal-top">
+          <div class="signal-title">{{ w.entity_name }} — {{ w.signal_type|title }}</div>
+          <span class="badge" style="background:#9ca3af;">{{ w.source }}</span>
+        </div>
+        <p style="font-size:12px;margin-top:6px;">{{ w.evidence|join:" " }}</p>
+        <p style="font-size:12px;">
+          {% if w.entity_type == 'project' %}<a href="/project_intelligence/{{ w.entity_id }}/">Investigate project →</a>{% else %}<a href="/employee_intelligence/{{ w.entity_id }}/">Investigate employee →</a>{% endif %}
+          <a href="/future_scenario/{{ w.entity_type }}/{{ w.entity_id }}/" style="margin-left:10px;">Possible future →</a>
+        </p>
+      </div>
+      {% empty %}<div class="empty">No emerging situations detected right now.</div>{% endfor %}
+    </div>
+
+    <!-- HUMAN-AI WORKFORCE SIGNALS (Prompt 10) -->
+    <div class="card">
+      <h2>Human-AI Workforce Signals</h2>
+      <div class="sub"><a href="/workforce_interactions/">Open full Interaction Center →</a></div>
+      <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+        <span class="badge" style="background:#ef4444;">{{ human_ai_signals.open_blockers }} Open Blockers</span>
+        <span class="badge" style="background:#f59e0b;">{{ human_ai_signals.urgent_requests }} Urgent Requests</span>
+        <span class="badge" style="background:#6366f1;">{{ human_ai_signals.pending_assistance }} Pending Assistance</span>
+        <span class="badge" style="background:#9ca3af;">{{ human_ai_signals.pending_responses }} Pending Employee Responses</span>
+      </div>
+      {% for c in human_ai_signals.recent_concerns %}
+      <div class="kv"><span><a href="/workforce_interaction/{{ c.id }}/">{{ c.employee.user.first_name|default:c.employee.empid }} — {{ c.subject }}</a></span><span>{{ c.get_status_display }}</span></div>
+      {% empty %}<div class="empty">No open employee concerns right now.</div>{% endfor %}
+    </div>
+
+    <!-- ORGANIZATIONAL MEMORY (Prompt 11) -->
+    <div class="card">
+      <h2>Organizational Memory</h2>
+      <div class="sub"><a href="/organizational_brain/">Open Organizational Brain →</a> &middot; <a href="/evidence_explorer/">Evidence Explorer →</a></div>
+      <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+        <span class="badge" style="background:#6366f1;">{{ org_memory_summary.decisions_recorded }} Decisions</span>
+        <span class="badge" style="background:#10b981;">{{ org_memory_summary.interventions_recorded }} Interventions</span>
+        <span class="badge" style="background:#f59e0b;">{{ org_memory_summary.predictions_evaluated }} Predictions Evaluated</span>
+        <span class="badge" style="background:#9ca3af;">{{ org_memory_summary.learning_signals_detected }} Learning Signals</span>
+      </div>
+      {% for d in org_recent_decisions %}
+      <div class="kv"><span>{{ d.title|truncatechars:60 }}</span><span>{{ d.status }}</span></div>
+      {% empty %}<div class="empty">NO VERIFIED DATA AVAILABLE</div>{% endfor %}
+    </div>
+
+    <!-- 2. AI DECISION SIGNALS -->
+    <div class="card">
+      <h2>AI Decision Signals</h2>
+      <div class="sub">Live predictions from trained models, mapped to real database entities.</div>
+
+      {% for s in project_signals %}
+      <div class="signal {{ s.risk_level }}">
+        <div class="signal-top">
+          <div class="signal-title">📁 Project: {{ s.entity.name }}</div>
+          <span class="badge" style="background:{% if s.risk_level == 'High' %}#ef4444{% elif s.risk_level == 'Medium' %}#f59e0b{% else %}#10b981{% endif %};">{{ s.predicted_outcome }}</span>
+        </div>
+        {% if s.stale %}<div class="stale-tag">⚠ Data changed since this prediction — click "Run AI Analysis" to refresh.</div>{% endif %}
+        {% if s.probabilities %}
+        <div style="margin-top:8px;">
+          {% for k, v in s.probabilities.items %}<span style="font-size:12px;margin-right:16px;">{{ k }}: <b>{% widthratio v 1 100 %}%</b></span>{% endfor %}
+        </div>
+        {% endif %}
+        <p style="font-size:12px;color:#6b7280;margin:8px 0 0;">Confidence: {{ s.confidence }} &middot; Model: {{ s.model_version }} &middot; {{ s.prediction_date }}</p>
+
+        <details>
+          <summary>Investigate this signal →</summary>
+          <div style="margin-top:12px;">
+            <h4 style="font-size:13px;margin-bottom:4px;">Model Drivers</h4>
+            {% if s.drivers %}
+              {% for d in s.drivers %}<div class="driver-row"><span>{{ d.feature }} (value: {{ d.value }})</span><b>{{ d.importance }}</b></div>{% endfor %}
+            {% else %}<div class="empty">No driver data available for this model.</div>{% endif %}
+
+            <h4 style="font-size:13px;margin:12px 0 4px;">Operational Evidence</h4>
+            <p style="font-size:12px;">Total: {{ s.operational_evidence.total_tasks }} &middot; Completed: {{ s.operational_evidence.completed_tasks }} &middot; Pending: {{ s.operational_evidence.pending_tasks }} &middot; Overdue: {{ s.operational_evidence.overdue_tasks }} &middot; Completion: {{ s.operational_evidence.completion_rate }}% &middot; Team: {{ s.operational_evidence.team_size }} &middot; Days remaining: {{ s.operational_evidence.days_remaining }}</p>
+
+            <h4 style="font-size:13px;margin:12px 0 4px;">Team — Associated Signals</h4>
+            {% if s.team %}
+            <table class="dc">
+              <tr><th>Employee</th><th>Role</th><th>Assigned</th><th>Completed</th><th>Pending</th><th>Overdue</th><th>Employee Risk Signal</th></tr>
+              {% for t in s.team %}
+              <tr>
+                <td>{{ t.employee }}</td><td>{{ t.role }}</td><td>{{ t.assigned }}</td><td>{{ t.completed }}</td><td>{{ t.pending }}</td><td>{{ t.overdue }}</td>
+                <td>{% if t.risk_prediction %}{{ t.risk_prediction }} ({{ t.risk_confidence }}){% else %}No prediction{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </table>
+            {% else %}<div class="empty">No project team members assigned.</div>{% endif %}
+            <p><a href="/project_detail/{{ s.entity.id }}/">Open full Project Intelligence →</a></p>
+          </div>
+        </details>
+      </div>
+      {% endfor %}
+
+      {% for s in employee_signals %}
+      <div class="signal {{ s.risk_level }}">
+        <div class="signal-top">
+          <div class="signal-title">👤 Employee: {{ s.entity.user.first_name|default:s.entity.empid }}</div>
+          <span class="badge" style="background:{% if s.risk_level == 'High' %}#ef4444{% elif s.risk_level == 'Medium' %}#f59e0b{% else %}#10b981{% endif %};">{{ s.predicted_outcome }}</span>
+        </div>
+        {% if s.stale %}<div class="stale-tag">⚠ Data changed since this prediction — click "Run AI Analysis" to refresh.</div>{% endif %}
+        {% if s.probabilities %}
+        <div style="margin-top:8px;">
+          {% for k, v in s.probabilities.items %}<span style="font-size:12px;margin-right:16px;">{{ k }}: <b>{% widthratio v 1 100 %}%</b></span>{% endfor %}
+        </div>
+        {% endif %}
+        <p style="font-size:12px;color:#6b7280;margin:8px 0 0;">Confidence: {{ s.confidence }} &middot; Model: {{ s.model_version }} &middot; {{ s.prediction_date }}</p>
+        <details>
+          <summary>Investigate this signal →</summary>
+          <div style="margin-top:12px;">
+            <h4 style="font-size:13px;margin-bottom:4px;">Model Drivers</h4>
+            {% if s.drivers %}
+              {% for d in s.drivers %}<div class="driver-row"><span>{{ d.feature }} (value: {{ d.value }})</span><b>{{ d.importance }}</b></div>{% endfor %}
+            {% else %}<div class="empty">No driver data available for this model.</div>{% endif %}
+            <p style="font-size:12px;margin-top:10px;">Active projects: {% for p in s.projects %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% empty %}None{% endfor %}</p>
+            <p><a href="/admin_employee_detail/{{ s.entity.id }}/">Open full Employee Intelligence →</a></p>
+          </div>
+        </details>
+      </div>
+      {% endfor %}
+
+      {% if not project_signals and not employee_signals %}
+      <div class="empty">No AI predictions exist yet. Click "Run AI Analysis" above — this requires trained models (run <code>python manage.py train_ml_models</code> first if not already done).</div>
+      {% endif %}
+    </div>
+
+    <!-- CHARTS -->
+    <div class="card">
+      <h2>Risk Signal Distribution</h2>
+      <div style="position:relative;height:220px;max-width:400px;"><canvas id="riskDistChart"></canvas></div>
+    </div>
+
+    <!-- WORKLOAD DECISION INTELLIGENCE -->
+    <div class="card">
+      <h2>Workload Decision Intelligence</h2>
+      <div class="sub">Current pending/overdue task load per department, from live Task data.</div>
+      {% if dept_workload %}
+      <div style="position:relative;height:260px;"><canvas id="workloadChart"></canvas></div>
+      {% else %}<div class="empty">No department task data available.</div>{% endif %}
+      {% if not workload_history_exists %}
+      <p style="font-size:12px;color:#9ca3af;margin-top:8px;">No WorkloadHistory records exist yet — workload trend analysis is not available until historical data is recorded.</p>
+      {% endif %}
+    </div>
+
+    <!-- AI RECOMMENDATIONS -->
+    <div class="card">
+      <h2>AI Recommendations</h2>
+      <div class="sub">Generated only from actual High-risk model signals — never static text.</div>
+      {% if recommendations %}
+      <table class="dc">
+        <tr><th>Type</th><th>Entity</th><th>Evidence &amp; Recommendation</th><th>Priority</th><th>Status</th><th>Date</th></tr>
+        {% for r in recommendations %}
+        <tr>
+          <td>{{ r.recommendation_type }}</td>
+          <td>{% if r.project %}{{ r.project.name }}{% elif r.employee %}{{ r.employee.user.first_name|default:r.employee.empid }}{% else %}-{% endif %}</td>
+          <td style="font-size:12px;">{{ r.recommendation_text }}</td>
+          <td>{{ r.priority }}</td>
+          <td>
+            <form method="post" action="/update_recommendation_status/{{ r.id }}/">
+              {% csrf_token %}
+              <select name="status" onchange="this.form.submit()">
+                <option value="Open" {% if r.status == 'Open' %}selected{% endif %}>Open</option>
+                <option value="Acknowledged" {% if r.status == 'Acknowledged' %}selected{% endif %}>Acknowledged</option>
+                <option value="Resolved" {% if r.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+              </select>
+            </form>
+          </td>
+          <td>{{ r.created_date|date:"d M" }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}<div class="empty">No AI recommendations yet — none of the current signals reached High risk.</div>{% endif %}
+    </div>
+
+    <!-- MODEL TRUST PANEL -->
+    <div class="card">
+      <h2>AI Model Trust Panel</h2>
+      <table class="dc">
+        <tr><th>Model</th><th>Algorithm</th><th>Version</th><th>Trained</th><th>Training Samples</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Classes</th></tr>
+        {% for m in model_trust %}
+        <tr>
+          <td>{{ m.mv.model_name }}</td><td>{{ m.mv.algorithm }}</td><td>{{ m.mv.version }}</td>
+          <td>{{ m.mv.training_date|date:"d M Y" }}</td>
+          <td>{{ m.metrics.total_training_records|default:"Not available" }}</td>
+          <td>{{ m.metrics.accuracy|default:"Not available" }}</td>
+          <td>{{ m.metrics.precision|default:"Not available" }}</td>
+          <td>{{ m.metrics.recall|default:"Not available" }}</td>
+          <td>{{ m.metrics.f1_score|default:"Not available" }}</td>
+          <td>{{ m.metrics.classes|default:"Not available" }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="10" class="empty">No models trained yet.</td></tr>{% endfor %}
+      </table>
+      {% if model_trust %}
+      <p style="font-size:11px;color:#b45309;margin-top:10px;">Note: metrics reflect the most recent training run's held-out test split, which may be small — treat as indicative, not production-grade validation, until more historical data accumulates.</p>
+      {% endif %}
+    </div>
+
+  </section>
+</section>
+
+{% csrf_token %}
+<script>
+function markNotificationRead(id) {
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  fetch('/api/notifications/' + id + '/read/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrftoken },
+  }).then(r => r.json()).then(data => {
+    if (data.status === 'ok') {
+      const row = document.getElementById('notif-row-' + id);
+      if (row) row.remove();
+    }
+  });
+}
+
+(function() {
+  const el = document.getElementById('riskDistChart');
+  if (typeof Chart === 'undefined') { el.parentElement.innerHTML = '<p style="color:#ef4444;">Chart.js failed to load.</p>'; return; }
+  const counts = {{ risk_dist_counts|safe }};
+  if (!counts.some(v => v > 0)) { el.parentElement.innerHTML = '<p class="empty">No signals to chart yet.</p>'; return; }
+  new Chart(el, {
+    type: 'doughnut',
+    data: { labels: {{ risk_dist_labels|safe }}, datasets: [{ data: counts, backgroundColor: ['#ef4444','#f59e0b','#10b981'], borderWidth:3, borderColor:'#fff' }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'bottom'}} }
+  });
+})();
+
+(function() {
+  const el = document.getElementById('workloadChart');
+  if (!el) return;
+  if (typeof Chart === 'undefined') return;
+  new Chart(el, {
+    type: 'bar',
+    data: {
+      labels: {{ dept_workload_labels|safe }},
+      datasets: [
+        { label: 'Pending', data: {{ dept_workload_pending|safe }}, backgroundColor: '#f59e0b' },
+        { label: 'Overdue', data: {{ dept_workload_overdue|safe }}, backgroundColor: '#ef4444' }
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} }
+  });
+})();
+</script>
+{% endblock %}

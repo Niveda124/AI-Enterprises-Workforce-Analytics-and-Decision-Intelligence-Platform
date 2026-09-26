@@ -1,0 +1,30 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<style>
+  .mpr-wrap { padding:24px; background:#f4f6fb; }
+  .mpr-wrap h1 { margin:0 0 20px; font-size:22px; color:#1e1b4b; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); }
+  .warning-card { border-left:4px solid #9ca3af; border-radius:10px; padding:14px; margin-bottom:12px; background:#f8f9fc; }
+  .warning-card.CRITICAL { border-color:#ef4444; background:#fef2f2; }
+  .warning-card.WARNING { border-color:#f59e0b; background:#fffbeb; }
+  .warning-card.WATCH { border-color:#6366f1; background:#f5f5ff; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .empty { color:#9ca3af; font-size:14px; }
+</style>
+<section id="main-content">
+  <section class="wrapper mpr-wrap">
+    <h1>My Prevention</h1>
+    <div class="card">
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Only your own permitted information is shown here.</div>
+      {% for w in warnings %}
+      <div class="warning-card {{ w.severity }}">
+        <span class="badge" style="background:{% if w.severity == 'CRITICAL' %}#ef4444{% elif w.severity == 'WARNING' %}#f59e0b{% else %}#6366f1{% endif %};">{{ w.severity }}</span>
+        <b>{{ w.signal_type|title }}</b>
+        <ul style="font-size:12px;margin:8px 0;padding-left:18px;">{% for ev in w.evidence %}<li>{{ ev }}</li>{% endfor %}</ul>
+        <div style="font-size:11px;color:#9ca3af;">Source: {{ w.source }} — {{ w.disclaimer }}</div>
+      </div>
+      {% empty %}<div class="empty">No verified early warnings currently detected.</div>{% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

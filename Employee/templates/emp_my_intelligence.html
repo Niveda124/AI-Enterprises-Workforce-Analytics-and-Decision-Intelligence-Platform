@@ -1,0 +1,69 @@
+{% extends 'emp_index.html' %}
+{% block body %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <h2>My Intelligence</h2>
+
+    <h3>My Performance Trend</h3>
+    {% if performance %}
+    <canvas id="perfChart" height="100" style="max-width:600px;"></canvas>
+    <script>
+      new Chart(document.getElementById('perfChart'), {
+        type: 'line',
+        data: { labels: {{ perf_periods|safe }}, datasets: [{ label: 'Performance Score', data: {{ perf_scores|safe }}, borderColor: '#6366f1', fill: false }] },
+        options: { responsive: true }
+      });
+    </script>
+    {% else %}<p>Performance trend will appear when sufficient historical data is available.</p>{% endif %}
+
+    <h3>My Current Workload</h3>
+    <p><b>Pending:</b> {{ my_pending }} &nbsp; <b>Overdue:</b> {{ my_overdue }} &nbsp; <b>Completed:</b> {{ my_completed }}</p>
+    <p><b>Workload Status:</b>
+      <span style="padding:3px 10px;border-radius:12px;color:#fff;font-size:12px;
+        background:{% if my_workload_status == 'Critical' %}#ef4444{% elif my_workload_status == 'High' %}#fb923c{% elif my_workload_status == 'Moderate' %}#f59e0b{% else %}#10b981{% endif %};">
+        {{ my_workload_status }}
+      </span>
+    </p>
+
+    <h3>My Workload History</h3>
+    {% if workload %}
+    <canvas id="workloadChart" height="100" style="max-width:600px;"></canvas>
+    <script>
+      new Chart(document.getElementById('workloadChart'), {
+        type: 'bar',
+        data: {
+          labels: {{ workload_periods|safe }},
+          datasets: [
+            { label: 'Assigned', data: {{ workload_assigned|safe }}, backgroundColor: '#6366f1' },
+            { label: 'Completed', data: {{ workload_completed|safe }}, backgroundColor: '#10b981' },
+            { label: 'Pending', data: {{ workload_pending|safe }}, backgroundColor: '#f59e0b' },
+            { label: 'Overdue', data: {{ workload_overdue|safe }}, backgroundColor: '#ef4444' }
+          ]
+        },
+        options: { responsive: true }
+      });
+    </script>
+    {% else %}<p>No workload history recorded yet.</p>{% endif %}
+
+    <h3>My Performance Prediction</h3>
+    {% if perf_prediction %}
+      <p><b>Outcome:</b> {{ perf_prediction.predicted_outcome }} — <b>Confidence:</b> {{ perf_prediction.confidence }} — {{ perf_prediction.prediction_date }} — {{ perf_prediction.model_version }}</p>
+    {% else %}<p>Prediction unavailable until a valid ML model is trained.</p>{% endif %}
+
+    <h3>My Risk Prediction</h3>
+    {% if risk_prediction %}
+      <p><b>Risk:</b> {{ risk_prediction.predicted_outcome }} — <b>Confidence:</b> {{ risk_prediction.confidence }} — {{ risk_prediction.prediction_date }} — {{ risk_prediction.model_version }}</p>
+      <h4>Why this prediction</h4>
+      {% if risk_explanation %}
+        <ul>{% for e in risk_explanation %}<li>{{ e.feature }} (importance: {{ e.importance }}, value: {{ e.value }})</li>{% endfor %}</ul>
+      {% else %}<p>Detailed explanation is unavailable for this model.</p>{% endif %}
+    {% else %}<p>Insufficient historical data for reliable prediction.</p>{% endif %}
+
+    <h3>AI Recommendations</h3>
+    {% if recommendations %}
+      {% for r in recommendations %}<p>{{ r.recommendation_text }} ({{ r.priority }})</p>{% endfor %}
+    {% else %}<p>No AI recommendations available yet.</p>{% endif %}
+  </section>
+</section>
+{% endblock %}

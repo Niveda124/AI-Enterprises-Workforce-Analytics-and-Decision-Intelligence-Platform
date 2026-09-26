@@ -1,0 +1,62 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .wi-wrap { padding:24px; background:#f4f6fb; }
+  .wi-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .wi-header h1 { margin:0; font-size:22px; color:#1e1b4b; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .state-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:14px; margin-bottom:20px; }
+  .state-card { background:#f8f9fc; border-radius:12px; padding:16px; text-align:center; }
+  .state-card .n { font-size:24px; font-weight:800; color:#1e1b4b; }
+  .state-card .l { font-size:11px; color:#6b7280; text-transform:uppercase; }
+  .filters a { display:inline-block; padding:7px 14px; border-radius:20px; font-size:12px; font-weight:600; text-decoration:none; color:#4b5563; background:#fff; margin-right:6px; margin-bottom:10px; border:1px solid #e2e4ee; }
+  .filters a.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:transparent; }
+  table.dc { width:100%; border-collapse:collapse; font-size:13px; }
+  table.dc th, table.dc td { text-align:left; padding:10px 8px; border-bottom:1px solid #eef0f6; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .empty { color:#9ca3af; font-size:14px; }
+</style>
+<section id="main-content">
+  <section class="wrapper wi-wrap">
+    <div class="wi-header">
+      <h1>Workforce Interaction Center</h1>
+      <a href="/decision_center/" class="btn" style="background:linear-gradient(135deg,#9ca3af,#6b7280);">Decision Center</a>
+    </div>
+
+    <div class="state-grid">
+      <div class="state-card"><div class="n">{{ open_count }}</div><div class="l">Open</div></div>
+      <div class="state-card"><div class="n" style="color:#f59e0b;">{{ attention_count }}</div><div class="l">Attention</div></div>
+      <div class="state-card"><div class="n" style="color:#ef4444;">{{ urgent_count }}</div><div class="l">Urgent</div></div>
+      <div class="state-card"><div class="n">{{ waiting_count }}</div><div class="l">Waiting for Employee</div></div>
+      <div class="state-card"><div class="n" style="color:#10b981;">{{ resolved_count }}</div><div class="l">Resolved</div></div>
+    </div>
+
+    <div class="card">
+      <div class="filters">
+        <a href="?type=all" class="{% if active_filter == 'all' %}active{% endif %}">All</a>
+        <a href="?type=blockers" class="{% if active_filter == 'blockers' %}active{% endif %}">Blockers</a>
+        <a href="?type=clarifications" class="{% if active_filter == 'clarifications' %}active{% endif %}">Clarifications</a>
+        <a href="?type=assistance" class="{% if active_filter == 'assistance' %}active{% endif %}">Assistance</a>
+        <a href="?type=deadline" class="{% if active_filter == 'deadline' %}active{% endif %}">Deadline Concerns</a>
+        <a href="?type=task" class="{% if active_filter == 'task' %}active{% endif %}">Task Issues</a>
+        <a href="?type=project" class="{% if active_filter == 'project' %}active{% endif %}">Project Issues</a>
+      </div>
+      <table class="dc">
+        <tr><th>Employee</th><th>Type</th><th>Subject</th><th>Priority</th><th>AI Category</th><th>Status</th><th>Created</th></tr>
+        {% for i in interactions %}
+        <tr onclick="window.location='/workforce_interaction/{{ i.id }}/'" style="cursor:pointer;">
+          <td>{{ i.employee.user.first_name|default:i.employee.empid }}</td>
+          <td>{{ i.get_interaction_type_display }}</td>
+          <td>{{ i.subject }}</td>
+          <td><span class="badge" style="background:{% if i.priority == 'URGENT' %}#ef4444{% elif i.priority == 'ATTENTION' %}#f59e0b{% else %}#6366f1{% endif %};">{{ i.get_priority_display }}</span></td>
+          <td>{{ i.ai_category|default:"-" }}</td>
+          <td><span class="badge" style="background:#9ca3af;">{{ i.get_status_display }}</span></td>
+          <td>{{ i.created_date|date:"d M, H:i" }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="empty">No interactions recorded yet.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </section>
+</section>
+{% endblock %}

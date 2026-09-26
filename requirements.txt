@@ -1,0 +1,6 @@
+pandas
+numpy
+scikit-learn
+joblib
+xhtml2pdf
+Django==6.1.1

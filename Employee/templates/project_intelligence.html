@@ -1,0 +1,102 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<style>
+  .pi-wrap { padding:24px; background:#f4f6fb; }
+  .pi-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .pi-header h1 { margin:0; font-size:22px; color:#1e1b4b; }
+  .btn { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:9px 18px; border:none; border-radius:10px; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 2px 12px rgba(30,27,75,0.06); margin-bottom:20px; }
+  .card h2 { font-size:16px; color:#1e1b4b; margin:0 0 4px; }
+  .sub { font-size:12px; color:#9ca3af; margin-bottom:14px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:800px){ .grid2 { grid-template-columns:1fr; } }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #eef0f6; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; }
+  .timeline-item { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #eef0f6; font-size:13px; }
+  .timeline-time { font-size:11px; color:#9ca3af; min-width:90px; }
+  table.dc { width:100%; border-collapse:collapse; font-size:13px; }
+  table.dc th, table.dc td { text-align:left; padding:8px; border-bottom:1px solid #eef0f6; }
+  .empty { color:#9ca3af; font-size:13px; }
+</style>
+
+<section id="main-content">
+  <section class="wrapper pi-wrap">
+    <div class="pi-header">
+      <h1>Project Intelligence — {{ twin.name }}</h1>
+      <div>
+        <a href="/project_detail/{{ project_id }}/" class="btn" style="background:linear-gradient(135deg,#9ca3af,#6b7280);">Full Project Dashboard</a>
+        <a href="/workforce_observatory/" class="btn">Observatory</a>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Project Overview <span class="badge" style="background:#6366f1;">{{ twin.status }}</span></h2>
+        <div class="kv"><span>Code</span><span>{{ twin.code|default:"-" }}</span></div>
+        <div class="kv"><span>Department</span><span>{{ twin.department|default:"-" }}</span></div>
+        <div class="kv"><span>Manager</span><span>{{ twin.manager|default:"-" }}</span></div>
+        <div class="kv"><span>Priority</span><span>{{ twin.priority }}</span></div>
+        <div class="kv"><span>Start date</span><span>{{ twin.start_date|default:"-" }}</span></div>
+        <div class="kv"><span>Deadline</span><span>{{ twin.deadline|default:"-" }}</span></div>
+        <div class="kv"><span>Progress</span><span>{{ twin.progress }}%</span></div>
+        <div class="kv"><span>Team size</span><span>{{ twin.employee_count }}</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Project Health <span class="badge real" style="background:#10b981;">REAL DATA</span></h2>
+        <div class="kv"><span>Tasks total / completed</span><span>{{ twin.task_stats.total }} / {{ twin.task_stats.completed }}</span></div>
+        <div class="kv"><span>Pending tasks</span><span>{{ twin.task_stats.pending }}</span></div>
+        <div class="kv"><span>Overdue tasks</span><span style="color:{% if twin.task_stats.overdue %}#ef4444{% else %}#1e1b4b{% endif %};">{{ twin.task_stats.overdue }}</span></div>
+        <div class="kv"><span>Completion rate</span><span>{% if twin.task_stats.completion_rate != None %}{{ twin.task_stats.completion_rate }}{% else %}-{% endif %}</span></div>
+        <div class="kv"><span>Team avg performance score</span><span>{{ twin.performance_indicators.team_avg_performance_score|default:"-" }}</span></div>
+        <div class="kv"><span>Team avg completion rate</span><span>{{ twin.performance_indicators.team_avg_completion_rate|default:"-" }}</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>AI Evidence</h2>
+      {% if twin.risk_prediction.available %}
+        <div class="kv"><span>Prediction</span><span><b>{{ twin.risk_prediction.predicted_outcome }}</b></span></div>
+        <div class="kv"><span>Confidence</span><span>{{ twin.risk_prediction.confidence }}</span></div>
+        <div class="kv"><span>Model version</span><span>{{ twin.risk_prediction.model_version }}</span></div>
+        {% if explanation.available %}
+          <p style="font-size:13px;margin-top:10px;">{{ explanation.summary }}</p>
+        {% endif %}
+        <p style="font-size:12px;"><a href="/api/intelligence/explain/project/{{ project_id }}/">View raw explanation JSON</a></p>
+      {% else %}
+        <div class="empty">
+          <span class="badge" style="background:#9ca3af;">{{ twin.risk_prediction.reason|upper|default:"MODEL_NOT_READY" }}</span>
+          — no fabricated prediction is shown while this is the case.
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Team</h2>
+        <table class="dc">
+          <tr><th>Employee</th><th>Role</th><th>Assigned</th><th>Overdue</th><th></th></tr>
+          {% for m in twin.workload_distribution %}
+          <tr>
+            <td>{{ m.name }}</td><td>{{ m.role }}</td><td>{{ m.assigned }}</td>
+            <td style="color:{% if m.overdue %}#ef4444{% else %}inherit{% endif %};">{{ m.overdue }}</td>
+            <td><a href="/employee_intelligence/{{ m.employee_id }}/">Open</a></td>
+          </tr>
+          {% empty %}<tr><td colspan="5" class="empty">No active team members.</td></tr>{% endfor %}
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Project Timeline</h2>
+        <div class="sub">Real recorded events for this project.</div>
+        {% for e in timeline %}
+        <div class="timeline-item">
+          <div class="timeline-time">{{ e.created_date|date:"d M, H:i" }}</div>
+          <div>{{ e.description }}{% if e.task %} <a href="/task_intelligence/{{ e.task.id }}/">(task)</a>{% endif %}</div>
+        </div>
+        {% empty %}<div class="empty">No recorded events for this project yet.</div>{% endfor %}
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'admin_index.html' %}
+{% block body %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <h2>Workload Intelligence</h2>
+
+    <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+      <div style="background:#6366f1;color:#fff;padding:16px 20px;border-radius:10px;"><b>Total Employees</b><br><span style="font-size:24px;">{{ total_employees }}</span></div>
+      <div style="background:#06b6d4;color:#fff;padding:16px 20px;border-radius:10px;"><b>With Active Workload</b><br><span style="font-size:24px;">{{ active_employees }}</span></div>
+      <div style="background:#f59e0b;color:#fff;padding:16px 20px;border-radius:10px;"><b>Pending Tasks</b><br><span style="font-size:24px;">{{ total_pending }}</span></div>
+      <div style="background:#ef4444;color:#fff;padding:16px 20px;border-radius:10px;"><b>Overdue Tasks</b><br><span style="font-size:24px;">{{ total_overdue }}</span></div>
+    </div>
+
+    <canvas id="statusChart" height="80" style="max-width:500px;margin-bottom:20px;"></canvas>
+    <script>
+      new Chart(document.getElementById('statusChart'), {
+        type: 'bar',
+        data: { labels: {{ status_labels|safe }}, datasets: [{ label: 'Employees', data: {{ status_counts|safe }}, backgroundColor: ['#10b981','#f59e0b','#fb923c','#ef4444'] }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    </script>
+
+    <table style="width:100%;border-collapse:collapse;background:#fff;">
+      <tr style="background:#4338ca;color:#fff;">
+        <th style="padding:8px;">Employee</th><th style="padding:8px;">Dept</th><th style="padding:8px;">Assigned</th>
+        <th style="padding:8px;">Completed</th><th style="padding:8px;">Pending</th><th style="padding:8px;">Overdue</th>
+        <th style="padding:8px;">Workload Score</th><th style="padding:8px;">Performance Score</th><th style="padding:8px;">Status</th>
+      </tr>
+      {% for r in rows %}
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:8px;">{{ r.employee.user.first_name }}</td>
+        <td style="padding:8px;">{{ r.dept }}</td>
+        <td style="padding:8px;">{{ r.assigned }}</td>
+        <td style="padding:8px;">{{ r.completed }}</td>
+        <td style="padding:8px;">{{ r.pending }}</td>
+        <td style="padding:8px;">{{ r.overdue }}</td>
+        <td style="padding:8px;">{% if r.workload_score != None %}{{ r.workload_score }}{% else %}Historical workload data unavailable{% endif %}</td>
+        <td style="padding:8px;">{% if r.performance_score != None %}{{ r.performance_score }}{% else %}No performance history{% endif %}</td>
+        <td style="padding:8px;">
+          <span style="padding:3px 10px;border-radius:12px;color:#fff;font-size:12px;
+            background:{% if r.status == 'Critical' %}#ef4444{% elif r.status == 'High' %}#fb923c{% elif r.status == 'Moderate' %}#f59e0b{% else %}#10b981{% endif %};">
+            {{ r.status }}
+          </span>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" style="padding:16px;text-align:center;">No employees found.</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+</section>
+{% endblock %}

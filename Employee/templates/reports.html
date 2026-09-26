@@ -1,0 +1,73 @@
+{% if is_admin_view %}{% extends 'admin_index.html' %}{% else %}{% extends 'emp_index.html' %}{% endif %}
+{% block body %}
+<section id="main-content">
+  <section class="wrapper" style="padding:20px;">
+    <h2>Reports</h2>
+
+    {% if is_admin_view %}
+      <h3>Workforce Report</h3>
+      <p>{{ emp_count }} employees across {{ dept_count }} departments.</p>
+      <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+        <tr style="background:#6366f1;color:#fff;"><th style="padding:8px;">Department</th><th style="padding:8px;">Employees</th></tr>
+        {% for d in dept_rows %}<tr><td style="padding:8px;">{{ d.dept }}</td><td style="padding:8px;">{{ d.emp_count }}</td></tr>{% endfor %}
+      </table>
+
+      <h3>Project Report</h3>
+      <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+        <tr style="background:#06b6d4;color:#fff;"><th style="padding:8px;">Project</th><th style="padding:8px;">Status</th><th style="padding:8px;">Priority</th><th style="padding:8px;">Progress</th><th style="padding:8px;">Tasks</th><th style="padding:8px;">Completed</th></tr>
+        {% for p in project_rows %}
+        <tr><td style="padding:8px;">{{ p.name }}</td><td style="padding:8px;">{{ p.status }}</td><td style="padding:8px;">{{ p.priority }}</td><td style="padding:8px;">{{ p.progress }}%</td><td style="padding:8px;">{{ p.total_tasks }}</td><td style="padding:8px;">{{ p.completed_tasks }}</td></tr>
+        {% empty %}<tr><td colspan="6" style="padding:16px;text-align:center;">No projects yet.</td></tr>{% endfor %}
+      </table>
+
+      <h3>Performance Report</h3>
+      {% if performance_rows %}
+      <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+        <tr style="background:#10b981;color:#fff;"><th style="padding:8px;">Employee</th><th style="padding:8px;">Period</th><th style="padding:8px;">Completion Rate</th><th style="padding:8px;">On-Time Rate</th><th style="padding:8px;">Workload</th></tr>
+        {% for r in performance_rows %}<tr><td style="padding:8px;">{{ r.employee }}</td><td style="padding:8px;">{{ r.period }}</td><td style="padding:8px;">{{ r.completion_rate }}%</td><td style="padding:8px;">{{ r.on_time_rate }}%</td><td style="padding:8px;">{{ r.workload_score }}</td></tr>{% endfor %}
+      </table>
+      {% else %}<p>No performance history recorded yet.</p>{% endif %}
+
+      <h3>AI Report</h3>
+      {% if ai_rows %}
+      <table style="width:100%;border-collapse:collapse;background:#fff;">
+        <tr style="background:#ef4444;color:#fff;"><th style="padding:8px;">Type</th><th style="padding:8px;">Outcome</th><th style="padding:8px;">Confidence</th><th style="padding:8px;">Risk</th><th style="padding:8px;">Model Version</th><th style="padding:8px;">Date</th></tr>
+        {% for a in ai_rows %}<tr><td style="padding:8px;">{{ a.prediction_type }}</td><td style="padding:8px;">{{ a.predicted_outcome }}</td><td style="padding:8px;">{{ a.confidence }}</td><td style="padding:8px;">{{ a.risk_level }}</td><td style="padding:8px;">{{ a.model_version }}</td><td style="padding:8px;">{{ a.prediction_date }}</td></tr>{% endfor %}
+      </table>
+      {% else %}<p>No AI prediction records yet.</p>{% endif %}
+      <p><a href="/download_report">Download PDF (Workforce Summary)</a></p>
+
+    {% else %}
+      <h3>My Performance Report</h3>
+      {% if my_performance_rows %}
+      <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+        <tr style="background:#6366f1;color:#fff;"><th style="padding:8px;">Period</th><th style="padding:8px;">Completion Rate</th><th style="padding:8px;">On-Time Rate</th><th style="padding:8px;">Score</th></tr>
+        {% for r in my_performance_rows %}<tr><td style="padding:8px;">{{ r.period }}</td><td style="padding:8px;">{{ r.completion_rate }}%</td><td style="padding:8px;">{{ r.on_time_rate }}%</td><td style="padding:8px;">{{ r.performance_score }}</td></tr>{% endfor %}
+      </table>
+      {% else %}<p>No performance history recorded yet.</p>{% endif %}
+
+      <h3>My Workload Report</h3>
+      <p>{{ my_completed }} / {{ my_tasks }} tasks completed.</p>
+      {% if my_workload_rows %}
+      <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+        <tr style="background:#06b6d4;color:#fff;"><th style="padding:8px;">Period</th><th style="padding:8px;">Assigned</th><th style="padding:8px;">Completed</th><th style="padding:8px;">Pending</th><th style="padding:8px;">Overdue</th></tr>
+        {% for w in my_workload_rows %}<tr><td style="padding:8px;">{{ w.period }}</td><td style="padding:8px;">{{ w.assigned_count }}</td><td style="padding:8px;">{{ w.completed_count }}</td><td style="padding:8px;">{{ w.pending_count }}</td><td style="padding:8px;">{{ w.overdue_count }}</td></tr>{% endfor %}
+      </table>
+      {% else %}<p>No workload history recorded yet.</p>{% endif %}
+
+      <h3>My Project Report</h3>
+      {% if my_project_rows %}
+        {% for p in my_project_rows %}<p>{{ p.project }} — {{ p.role }} — Progress: {{ p.progress }}% — My tasks: {{ p.my_tasks }}</p>{% endfor %}
+      {% else %}<p>Member of {{ my_projects }} active project(s).</p>{% endif %}
+
+      <h3>My AI Report</h3>
+      {% if my_predictions %}
+        {% for p in my_predictions %}<p>{{ p.prediction_type }}: {{ p.predicted_outcome }} (confidence: {{ p.confidence }}, risk: {{ p.risk_level }})</p>{% endfor %}
+      {% else %}<p>No AI prediction records yet.</p>{% endif %}
+      {% if my_recommendations %}
+        {% for r in my_recommendations %}<p>{{ r.recommendation_text }} ({{ r.priority }})</p>{% endfor %}
+      {% else %}<p>No AI recommendations available yet.</p>{% endif %}
+    {% endif %}
+  </section>
+</section>
+{% endblock %}
